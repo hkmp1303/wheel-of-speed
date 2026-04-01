@@ -58,12 +58,13 @@ A Postman collection for this project can be found at this link. You may need to
 ## Project Scope
 
 This project is intended for educational purposes. Error handling and security are simplified. In a production environment, the connection string would be moved to configuration files or environment variables.
+
 ## Development Process
 
 As part of the Agile development process, the project includes the following artifacts:
 
-    Wireframe illustrating a simplified outline of the planned user interface
-    Mockups illustrating the planned graphical user interface
+- Wireframe illustrating a simplified outline of the planned user interface
+- Mockups illustrating the planned graphical user interface
 
 These artifacts were developed in Miro and are available in the docs/agile directory.
 
@@ -77,11 +78,13 @@ These artifacts were developed in Miro and are available in the docs/agile direc
 
 This project was developed as a group assignment.
 
-    - Emmanuel
-      -@
-    - Heather
-        @hkmp1303
-    - Mohamed
-        @
+- Christian
+  - @Meza
+- Emmanuel
+  - @mannilowman
+- Heather
+  - @hkmp1303
+- Mohamed
+  - @MO
 
 README & Documentation authored by: Heather
