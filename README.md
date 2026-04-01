@@ -28,9 +28,9 @@ Functional Requirements
 
 For inital setup
 ```shell
-git clone git@github.com:hkmp1303/filmvisarna.git
+git clone git@github.com:hkmp1303/wheel-of-speed.git
 
-cd filmvisarna
+cd wheel-of-speed
 
 npm install
 ```
