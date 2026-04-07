@@ -79,12 +79,14 @@ These artifacts were developed in Miro and are available in the docs/agile direc
 This project was developed as a group assignment.
 
 - Christian
-  - @Meza
+  - @Mezea11
 - Emmanuel
   - @mannilowman
 - Heather
   - @hkmp1303
 - Mohamed
-  - @MO
+  - @mohamedadam1129
+- Samir
+  - @samirpolozen
 
 README & Documentation authored by: Heather
