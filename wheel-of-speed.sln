@@ -1,0 +1,25 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WheelOfSpeed.Server", "Server\\WheelOfSpeed.Server.csproj", "{F2C4D50C-8C2D-48C1-B3D2-1C0F3AF7B271}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WheelOfSpeed.UnitTests", "Testing\\UnitTests\\WheelOfSpeed.UnitTests\\WheelOfSpeed.UnitTests.csproj", "{836E2C0E-B5C2-4F91-B78A-8156B6E1E79E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F2C4D50C-8C2D-48C1-B3D2-1C0F3AF7B271}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2C4D50C-8C2D-48C1-B3D2-1C0F3AF7B271}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2C4D50C-8C2D-48C1-B3D2-1C0F3AF7B271}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2C4D50C-8C2D-48C1-B3D2-1C0F3AF7B271}.Release|Any CPU.Build.0 = Release|Any CPU
+		{836E2C0E-B5C2-4F91-B78A-8156B6E1E79E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{836E2C0E-B5C2-4F91-B78A-8156B6E1E79E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{836E2C0E-B5C2-4F91-B78A-8156B6E1E79E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{836E2C0E-B5C2-4F91-B78A-8156B6E1E79E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
