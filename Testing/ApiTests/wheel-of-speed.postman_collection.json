@@ -1,0 +1,356 @@
+{
+  "info": {
+    "_postman_id": "a45df5dd-e6a0-4fd3-b353-4dc89f9a51b2",
+    "name": "Wheel of Speed API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.test('Health payload is ok', function () {",
+              "  pm.expect(body.status).to.eql('ok');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create match",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"hostName\": \"Alice\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matches",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matches"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.response.to.have.status(200);",
+              "const body = pm.response.json();",
+              "",
+              "pm.test('Match starts in lobby with one player', function () {",
+              "  pm.expect(body.status).to.eql('Lobby');",
+              "  pm.expect(body.players).to.have.length(1);",
+              "});",
+              "",
+              "pm.test('Guid code is present', function () {",
+              "  pm.expect(body.guidCode).to.be.a('string').and.have.length(8);",
+              "});",
+              "",
+              "pm.environment.set('guidCode', body.guidCode);",
+              "pm.environment.set('hostPlayerId', body.players[0].playerId);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Join match",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"playerName\": \"Bob\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matches/{{guidCode}}/join",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matches", "{{guidCode}}", "join"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.response.to.have.status(200);",
+              "const body = pm.response.json();",
+              "",
+              "pm.test('Lobby has two players after join', function () {",
+              "  pm.expect(body.players).to.have.length(2);",
+              "  pm.expect(body.status).to.eql('Lobby');",
+              "});",
+              "",
+              "const bob = body.players.find(p => p.name === 'Bob');",
+              "pm.test('Joined player is Bob', function () {",
+              "  pm.expect(bob).to.exist;",
+              "});",
+              "",
+              "pm.environment.set('guestPlayerId', bob.playerId);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Host marks ready",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"playerId\": \"{{hostPlayerId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matches/{{guidCode}}/ready",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matches", "{{guidCode}}", "ready"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.response.to.have.status(200);",
+              "const body = pm.response.json();",
+              "",
+              "pm.test('Still in lobby until all players are ready', function () {",
+              "  pm.expect(body.status).to.eql('Lobby');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Guest marks ready and auto-starts match",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"playerId\": \"{{guestPlayerId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matches/{{guidCode}}/ready",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matches", "{{guidCode}}", "ready"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.response.to.have.status(200);",
+              "const body = pm.response.json();",
+              "",
+              "pm.test('Match auto-starts when all players are ready', function () {",
+              "  pm.expect(body.status).to.eql('InProgress');",
+              "  pm.expect(body.currentRound).to.eql(1);",
+              "  pm.expect(body.activePlayerId).to.be.a('string').and.not.empty;",
+              "});",
+              "",
+              "const nonActive = body.players.find(p => p.playerId !== body.activePlayerId);",
+              "pm.environment.set('activePlayerId', body.activePlayerId);",
+              "pm.environment.set('nonActivePlayerId', nonActive.playerId);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Spin with non-active player is rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"playerId\": \"{{nonActivePlayerId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matches/{{guidCode}}/spin",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matches", "{{guidCode}}", "spin"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.response.to.have.status(400);",
+              "const body = pm.response.json();",
+              "",
+              "pm.test('Error explains turn validation', function () {",
+              "  pm.expect(body.error).to.include('turn');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Spin with active player",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"playerId\": \"{{activePlayerId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matches/{{guidCode}}/spin",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matches", "{{guidCode}}", "spin"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.response.to.have.status(200);",
+              "const body = pm.response.json();",
+              "",
+              "pm.test('Wheel value is set after spin', function () {",
+              "  pm.expect(body.currentWheelValue).to.be.oneOf([100, 200, 300, 400, 500]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Incorrect guess keeps match in progress",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"playerId\": \"{{activePlayerId}}\",\n  \"guess\": \"not-the-word\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matches/{{guidCode}}/guess",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matches", "{{guidCode}}", "guess"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.response.to.have.status(200);",
+              "const body = pm.response.json();",
+              "",
+              "pm.test('Incorrect guess does not end match', function () {",
+              "  pm.expect(body.status).to.eql('InProgress');",
+              "  pm.expect(body.lastMessage).to.include('Incorrect guess');",
+              "});",
+              "",
+              "const active = body.players.find(p => p.playerId === pm.environment.get('activePlayerId'));",
+              "pm.test('Incorrect guess does not award score', function () {",
+              "  pm.expect(active.score).to.eql(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get match state",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/matches/{{guidCode}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matches", "{{guidCode}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.response.to.have.status(200);",
+              "const body = pm.response.json();",
+              "",
+              "pm.test('Match can be fetched and has stable identity', function () {",
+              "  pm.expect(body.guidCode).to.eql(pm.environment.get('guidCode'));",
+              "  pm.expect(body.players).to.have.length(2);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ],
+  "event": []
+}
