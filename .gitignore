@@ -2,6 +2,7 @@
 **/obj/
 **/node_modules/
 frontend/dist/
+frontend/.vite/
 frontend/playwright-report/
 frontend/test-results/
 .vscode/
