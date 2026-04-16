@@ -126,6 +126,80 @@
       ]
     },
     {
+      "name": "Join match with duplicate player name is rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"playerName\": \"Alice\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matches/{{guidCode}}/join",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matches", "{{guidCode}}", "join"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.response.to.have.status(400);",
+              "const body = pm.response.json();",
+              "",
+              "pm.test('Error explains duplicate name rule', function () {",
+              "  pm.expect(body.error).to.include('already exists');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Join match with invalid guid code is rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"playerName\": \"Charlie\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matches/ZZZZZZZZ/join",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matches", "ZZZZZZZZ", "join"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.response.to.have.status(404);",
+              "const body = pm.response.json();",
+              "",
+              "pm.test('Error explains missing match', function () {",
+              "  pm.expect(body.error).to.include('Match not found');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
       "name": "Host marks ready",
       "request": {
         "method": "POST",

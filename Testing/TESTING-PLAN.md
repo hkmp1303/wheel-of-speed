@@ -34,6 +34,14 @@ This plan covers functionality that already exists in the current boilerplate.
 - Incorrect guess does not award score
   - API: `Incorrect guess keeps match in progress`
 
+### Validation and error handling
+
+- Duplicate player names are rejected
+  - Unit: `AddPlayer_ShouldThrow_WhenNameAlreadyExists`
+  - API: `Join match with duplicate player name is rejected`
+- Invalid match code is rejected
+  - API: `Join match with invalid guid code is rejected`
+
 ## Run Commands
 
 Run from `frontend` directory:
@@ -60,6 +68,5 @@ Current CI now runs:
 
 ## Next Expansion (After Current Baseline)
 
-- Add API tests for duplicate player name and invalid match code errors.
 - Add E2E for spin + guess flow and score update visibility.
 - Add E2E for round transition and finished-state visibility.
