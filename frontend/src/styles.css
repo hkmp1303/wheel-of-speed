@@ -1,12 +1,27 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap");
+
 :root {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: "Orbitron", system-ui, sans-serif;
   color: #f5f7fb;
-  background: #10131a;
+  background: #0a0e1a;
+  --accent-primary: #4f9dff;
+  --accent-secondary: #f5c542;
+  --accent-danger: #ff4f4f;
+  --glow-primary: 0 0 20px rgba(79, 157, 255, 0.6);
+  --glow-secondary: 0 0 15px rgba(245, 197, 66, 0.6);
 }
 
-* { box-sizing: border-box; }
-body { margin: 0; }
-button, input { font: inherit; }
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input {
+  font: inherit;
+  transition: all 0.3s ease;
+}
 
 .page {
   min-height: 100vh;
@@ -21,17 +36,66 @@ button, input { font: inherit; }
 
 .card {
   width: min(100%, 720px);
-  background: #171c26;
-  border: 1px solid #2b3342;
+  background: #0f131f;
+  border: 2px solid rgba(79, 157, 255, 0.3);
   border-radius: 18px;
-  padding: 1.5rem;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+  padding: 2rem;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.25),
+    var(--glow-primary);
+  animation: fade-in 0.6s ease;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.hero { display: grid; gap: 1rem; }
-.actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-.guess-form { display: flex; gap: 0.75rem; }
-.guess-form input, input {
+.hero {
+  display: grid;
+  gap: 2rem;
+  text-align: center;
+}
+.hero h1 {
+  font-family: "Press Start 2P", cursive;
+  font-size: 2.5rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  margin: 0;
+  color: #f5f7fb;
+  text-shadow: var(--glow-primary), var(--glow-primary);
+  animation: glow-pulse 2s ease-in-out infinite;
+  line-height: 1.2;
+}
+@keyframes glow-pulse {
+  0%,
+  100% {
+    text-shadow: var(--glow-primary), var(--glow-primary);
+  }
+  50% {
+    text-shadow:
+      var(--glow-primary),
+      0 0 40px rgba(79, 157, 255, 0.8);
+  }
+}
+.actions {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.guess-form {
+  display: flex;
+  gap: 0.75rem;
+}
+.guess-form input,
+input {
   width: 100%;
   padding: 0.8rem 1rem;
   border-radius: 12px;
@@ -40,15 +104,46 @@ button, input { font: inherit; }
   color: white;
 }
 button {
-  padding: 0.8rem 1rem;
-  border-radius: 12px;
-  border: none;
-  background: #5b8cff;
-  color: white;
+  margin-top: 10px;
+  font-family: "Orbitron", system-ui, sans-serif;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  border: 2px solid var(--accent-primary);
+  background: transparent;
+  color: var(--accent-primary);
   cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  box-shadow: var(--glow-primary);
+  transition: all 0.3s ease;
 }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
-.list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
+button:hover:not(:disabled) {
+  background: var(--accent-primary);
+  color: #0a0e1a;
+  transform: scale(1.05);
+  box-shadow:
+    var(--glow-primary),
+    0 0 30px rgba(79, 157, 255, 0.8);
+}
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: #555;
+  box-shadow: none;
+  color: #888;
+}
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
 .list li {
   display: flex;
   justify-content: space-between;
@@ -72,4 +167,7 @@ hr {
   border-top: 1px solid #2b3342;
   margin: 1.25rem 0;
 }
-label { display: block; margin-bottom: 0.4rem; }
+label {
+  display: block;
+  margin-bottom: 0.4rem;
+}
