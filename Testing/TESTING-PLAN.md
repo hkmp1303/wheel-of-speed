@@ -52,6 +52,9 @@ This plan covers functionality that already exists in the current boilerplate.
   - E2E: `active player can spin wheel and guess word`
 - Scoreboard updates reflect player scores after guess
   - E2E: `scoreboard updates with player scores after guess`
+- Incorrect guess does not rotate turn (timer-based rotation)
+  - E2E: `after incorrect guess spin is locked until timer rotates turn`
+  - Unit: `ApplyGuess_ShouldThrow_WhenWheelHasNotBeenSpun`
 
 ## Run Commands
 
@@ -79,4 +82,6 @@ Current CI now runs:
 
 ## Next Expansion (After Current Baseline)
 
-- Add E2E for round transition and finished-state visibility.
+- Add API test for correct-guess scoring (verify score increments by wheel value).
+- Add unit test for `FinishMatch` after last round resolves.
+- Add unit test for `RotateTurn` on timer expiry.
