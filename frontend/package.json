@@ -1,0 +1,25 @@
+{
+  "name": "wheel-of-speed-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:api": "newman run ../Testing/ApiTests/wheel-of-speed.postman_collection.json -e ../Testing/ApiTests/local.postman_environment.json"
+  },
+  "dependencies": {
+    "@microsoft/signalr": "^8.0.8",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2",
+    "@vitejs/plugin-react": "^4.3.1",
+    "newman": "^6.2.1",
+    "vite": "^5.4.2"
+  }
+}

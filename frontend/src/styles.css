@@ -1,0 +1,75 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #f5f7fb;
+  background: #10131a;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input { font: inherit; }
+
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+.page.wide {
+  grid-template-columns: minmax(300px, 800px);
+}
+
+.card {
+  width: min(100%, 720px);
+  background: #171c26;
+  border: 1px solid #2b3342;
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+
+.hero { display: grid; gap: 1rem; }
+.actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.guess-form { display: flex; gap: 0.75rem; }
+.guess-form input, input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #354155;
+  background: #0f131a;
+  color: white;
+}
+button {
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: none;
+  background: #5b8cff;
+  color: white;
+  cursor: pointer;
+}
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
+.list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  background: #0f131a;
+  border-radius: 12px;
+}
+.word {
+  letter-spacing: 0.4rem;
+  font-size: 2rem;
+  font-weight: 700;
+}
+.ending-box {
+  padding: 1rem;
+  border-radius: 12px;
+  background: #101826;
+}
+hr {
+  border: 0;
+  border-top: 1px solid #2b3342;
+  margin: 1.25rem 0;
+}
+label { display: block; margin-bottom: 0.4rem; }
