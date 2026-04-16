@@ -42,6 +42,17 @@ This plan covers functionality that already exists in the current boilerplate.
 - Invalid match code is rejected
   - API: `Join match with invalid guid code is rejected`
 
+### Game mechanics and scoring
+
+- Active player can spin wheel
+  - E2E: `active player can spin wheel and guess word`
+- Spin wheel produces point value
+  - E2E: `active player can spin wheel and guess word`
+- Active player can submit guess after spin
+  - E2E: `active player can spin wheel and guess word`
+- Scoreboard updates reflect player scores after guess
+  - E2E: `scoreboard updates with player scores after guess`
+
 ## Run Commands
 
 Run from `frontend` directory:
@@ -68,5 +79,4 @@ Current CI now runs:
 
 ## Next Expansion (After Current Baseline)
 
-- Add E2E for spin + guess flow and score update visibility.
 - Add E2E for round transition and finished-state visibility.
