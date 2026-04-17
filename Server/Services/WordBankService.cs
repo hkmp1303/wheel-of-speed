@@ -1,11 +1,6 @@
-namespace WheelOfSpeed.Services;
+using WheelOfSpeed.Models;
 
-public enum Difficulty
-{
-    Easy,
-    Normal,
-    Hard
-}
+namespace WheelOfSpeed.Services;
 
 public interface IWordBankService
 {
@@ -15,73 +10,63 @@ public interface IWordBankService
 
 public sealed class WordBankService : IWordBankService
 {
-    // Easy: 4-letter words — short and very common
     private static readonly string[] EasyWords =
     [
         "baby", "back", "ball", "band", "barn", "bear", "beat", "bike",
         "bird", "bite", "blow", "blue", "boat", "body", "bold", "bomb",
         "bond", "bone", "book", "boom", "boot", "born", "boss", "both",
-        "bowl", "burn", "cage", "cake", "call", "calm", "came", "card",
-        "care", "cart", "case", "cash", "cast", "cave", "chef", "chip",
-        "chop", "city", "clam", "clap", "clay", "clip", "club", "coal",
-        "coat", "coil", "cold", "comb", "come", "cook", "cool", "cope",
-        "copy", "cord", "core", "corn", "cost", "crab", "crew", "crop",
-        "dark", "dart", "data", "dawn", "deal", "dear", "deck", "deep",
-        "deer", "deny", "desk", "diet", "disk", "dive", "dock", "doll",
-        "dome", "door", "down", "draw", "drop", "drum", "dune", "dust",
-        "duty", "each", "earn", "east", "edge", "epic", "ever", "evil",
-        "face", "fact", "fail", "fake", "fall", "fame", "fast", "feat",
-        "feed", "feel", "feet", "fell", "felt", "file", "fill", "film",
-        "find", "fine", "fire", "fish", "flag", "flat", "flew", "flip",
-        "flow", "foam", "fold", "folk", "fond", "food", "ford", "fork",
-        "form", "fort", "foul", "free", "from", "fuel", "full", "fund",
-        "fury", "fuse", "gain", "game", "gang", "gate", "gear", "gift",
-        "give", "glad", "glow", "glue", "goal", "good", "grab", "gray",
-        "grew", "grid", "grin", "grip", "grow", "gulf", "guru", "gust",
-        "half", "hall", "halt", "hand", "hang", "hard", "harm", "harp",
-        "hash", "hate", "have", "hawk", "heal", "heap", "heat", "heel",
-        "hero", "hide", "high", "hike", "hill", "hint", "hire", "hold",
-        "hole", "home", "hook", "hope", "horn", "host", "huge", "hunt",
-        "hurt", "icon", "idea", "idle", "iron", "isle", "jump", "just",
-        "keep", "kill", "kind", "king", "kiss", "knot", "know", "lack",
-        "lake", "land", "lane", "last", "late", "lawn", "lead", "leaf",
-        "lean", "leap", "left", "less", "lick", "life", "lift", "like",
-        "lime", "link", "lion", "list", "live", "load", "lock", "logo",
-        "lone", "look", "loop", "lord", "lose", "loss", "lost", "love",
-        "luck", "made", "main", "make", "mall", "many", "mark", "mask",
-        "mast", "meal", "mean", "meet", "melt", "memo", "mess", "mild",
-        "milk", "mill", "mind", "mine", "mint", "miss", "mist", "moat",
+        "bowl", "burn", "cage", "cake", "call", "calm", "card", "care",
+        "cart", "case", "cash", "cave", "chef", "chip", "chop", "city",
+        "club", "coal", "coat", "cold", "come", "cook", "cool", "copy",
+        "cord", "core", "corn", "cost", "crab", "crew", "crop", "dark",
+        "dart", "data", "dawn", "deal", "dear", "deck", "deep", "deer",
+        "deny", "desk", "diet", "disk", "dive", "dock", "doll", "dome",
+        "door", "down", "draw", "drop", "drum", "dune", "dust", "duty",
+        "face", "fact", "fail", "fake", "fall", "fame", "fast", "fire",
+        "fish", "flag", "flat", "flow", "foam", "fold", "food", "fork",
+        "form", "fort", "free", "fuel", "full", "fund", "fury", "fuse",
+        "gain", "game", "gate", "gear", "gift", "give", "glow", "glue",
+        "goal", "good", "grab", "gray", "grid", "grin", "grip", "grow",
+        "gulf", "half", "hall", "hand", "hang", "hard", "harm", "hate",
+        "have", "hawk", "heal", "heat", "hero", "hide", "high", "hike",
+        "hill", "hint", "hire", "hold", "hole", "home", "hook", "hope",
+        "horn", "host", "huge", "hunt", "hurt", "icon", "idea", "idle",
+        "iron", "isle", "jump", "just", "keep", "kill", "kind", "king",
+        "kiss", "knot", "know", "lack", "lake", "land", "lane", "last",
+        "late", "lawn", "lead", "leaf", "lean", "leap", "left", "less",
+        "life", "lift", "like", "lime", "link", "lion", "list", "live",
+        "load", "lock", "logo", "lone", "look", "loop", "lord", "lose",
+        "loss", "lost", "love", "luck", "made", "main", "make", "mall",
+        "many", "mark", "mask", "meal", "mean", "meet", "melt", "mess",
+        "mild", "milk", "mill", "mind", "mine", "mint", "miss", "mist",
         "mock", "mode", "moon", "more", "most", "move", "much", "myth",
         "nail", "name", "navy", "neck", "need", "nice", "noon", "norm",
-        "note", "nova", "obey", "once", "only", "open", "oral", "oven",
-        "over", "pack", "page", "paid", "pain", "pair", "pale", "palm",
-        "park", "past", "path", "peak", "peel", "peer", "pick", "pike",
-        "pile", "pine", "pink", "pipe", "plan", "play", "plot", "plow",
-        "plug", "plus", "poem", "poet", "poke", "pole", "pond", "poor",
-        "pose", "post", "pour", "prey", "prop", "pull", "pump", "pure",
-        "push", "rain", "rake", "rank", "rare", "rate", "read", "real",
-        "reel", "rely", "rent", "rest", "rice", "rich", "ride", "ring",
-        "rise", "risk", "road", "roam", "roar", "role", "roll", "roof",
-        "room", "rope", "rose", "rule", "rush", "rust", "safe", "sail",
-        "sake", "salt", "sand", "sang", "seal", "seek", "self", "sell",
-        "shed", "ship", "shop", "shot", "show", "shut", "side", "sift",
-        "sign", "silk", "sing", "sink", "site", "skip", "slim", "slip",
-        "slow", "snow", "soap", "sock", "soil", "sold", "sole", "some",
-        "song", "soon", "sort", "soul", "soup", "sour", "span", "spin",
-        "spot", "star", "stay", "stem", "step", "stir", "stop", "surf",
-        "swim", "tail", "take", "tall", "task", "team", "tear", "tell",
-        "tent", "term", "test", "tide", "till", "time", "tiny", "tire",
-        "toad", "toll", "tone", "tool", "tour", "town", "trap", "tree",
-        "trek", "trim", "trio", "trip", "true", "tube", "tuck", "tune",
-        "turn", "twin", "type", "upon", "used", "vain", "vale", "vast",
-        "vent", "very", "vest", "view", "vine", "void", "wade", "wake",
-        "walk", "wall", "wand", "want", "warm", "wary", "wash", "wave",
-        "weak", "weed", "well", "went", "west", "when", "whip", "wide",
-        "wild", "will", "wind", "wine", "wing", "wire", "wise", "wish",
-        "with", "wolf", "worm", "wrap", "yard", "year", "your", "zone",
+        "note", "obey", "once", "only", "open", "oven", "over", "pack",
+        "page", "paid", "pain", "pair", "pale", "palm", "park", "past",
+        "path", "peak", "peel", "peer", "pick", "pile", "pine", "pink",
+        "pipe", "plan", "play", "plot", "plow", "plug", "plus", "poem",
+        "poet", "pole", "pond", "poor", "pose", "post", "pour", "prey",
+        "prop", "pull", "pump", "pure", "push", "rain", "rake", "rank",
+        "rare", "rate", "read", "real", "reel", "rely", "rent", "rest",
+        "rice", "rich", "ride", "ring", "rise", "risk", "road", "roam",
+        "roar", "role", "roll", "roof", "room", "rope", "rose", "rule",
+        "rush", "rust", "safe", "sail", "sake", "salt", "sand", "seal",
+        "seek", "self", "sell", "shed", "ship", "shop", "shot", "show",
+        "shut", "side", "sign", "silk", "sing", "sink", "site", "skip",
+        "slim", "slip", "slow", "snow", "soap", "sock", "soil", "sold",
+        "sole", "song", "soon", "sort", "soul", "soup", "sour", "span",
+        "spin", "spot", "star", "stay", "stem", "step", "stir", "stop",
+        "surf", "swim", "tail", "take", "tall", "task", "team", "tear",
+        "tell", "tent", "term", "test", "tide", "till", "time", "tiny",
+        "tire", "toad", "toll", "tone", "tool", "tour", "town", "trap",
+        "tree", "trek", "trim", "trio", "trip", "true", "tube", "tune",
+        "turn", "twin", "type", "used", "vain", "vast", "very", "view",
+        "vine", "void", "wade", "wake", "walk", "wall", "want", "warm",
+        "wash", "wave", "weak", "weed", "well", "went", "west", "whip",
+        "wide", "wild", "will", "wind", "wine", "wing", "wire", "wise",
+        "wish", "wolf", "worm", "wrap", "yard", "year", "zone",
     ];
 
-    // Normal: 6-letter words — recognizable but require more thought
     private static readonly string[] NormalWords =
     [
         "absent", "accent", "accept", "access", "active", "actual",
@@ -121,7 +106,6 @@ public sealed class WordBankService : IWordBankService
         "wisdom", "wonder", "wooden", "worker", "yellow",
     ];
 
-    // Hard: 8-letter words — longer and more challenging
     private static readonly string[] HardWords =
     [
         "absolute", "abstract", "accident", "accurate", "activate",
