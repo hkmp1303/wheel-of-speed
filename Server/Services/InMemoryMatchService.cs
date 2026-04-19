@@ -188,6 +188,14 @@ public sealed class InMemoryMatchService : IMatchService
                     continue;
                 }
 
+                // Do not start the countdown or reveal letters until the active player
+                // has spun the wheel for this turn. The spin sets CurrentWheelValue;
+                // until then, keep the timer paused and do not reveal letters.
+                if (match.CurrentWheelValue is null)
+                {
+                    continue;
+                }
+
                 match.SecondsLeft = Math.Max(match.SecondsLeft - 1, 0);
                 revealCounter += 1;
                 shouldBroadcast = true;

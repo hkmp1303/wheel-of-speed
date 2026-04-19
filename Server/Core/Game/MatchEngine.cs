@@ -252,4 +252,17 @@ public sealed class MatchEngine : IMatchEngine
             throw new InvalidOperationException("It is not this player's turn.");
         }
     }
+
+    private static readonly int[] WheelValues = new[] { 50, 100, 200, 300, 500, 1000 };
+
+    /// <summary>
+    /// Generate a wheel reward amount.
+    /// Optional seed parameter for deterministic testing.
+    /// </summary>
+    public int GenerateSpinReward(int? seed = null)
+    {
+        var rnd = seed.HasValue ? new Random(seed.Value) : new Random();
+        var idx = rnd.Next(0, WheelValues.Length);
+        return WheelValues[idx];
+    }
 }
