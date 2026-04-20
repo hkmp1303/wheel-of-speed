@@ -83,6 +83,12 @@ public sealed class InMemoryMatchService : IMatchService
         var match = GetMatchState(guidCode);
         lock (match)
         {
+            // If the round has ended, start the next round before allowing spin
+            if (match.Status == MatchStatus.RoundEnded)
+            {
+                _engine.StartNextRound(match, _wordBank.GetRandomWord());
+            }
+
             _engine.ApplySpin(match, playerId, _wordBank.GetRandomWheelValue());
         }
 
@@ -92,7 +98,6 @@ public sealed class InMemoryMatchService : IMatchService
     public async Task<MatchStateDto> GuessAsync(string guidCode, string playerId, string guess)
     {
         var match = GetMatchState(guidCode);
-        var shouldAdvance = false;
 
         lock (match)
         {
@@ -106,36 +111,13 @@ public sealed class InMemoryMatchService : IMatchService
                 }
                 else
                 {
-                    _engine.EndRound(updated, "Round finished. Next round will begin shortly.");
-                    shouldAdvance = true;
+                    _engine.EndRound(updated, "Round finished.");
+                    // Round will stay in RoundEnded status until next player spins
                 }
             }
         }
 
-        var dto = await BroadcastAsync(match);
-        if (shouldAdvance)
-        {
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(TimeSpan.FromSeconds(3));
-                var roundStarted = false;
-                lock (match)
-                {
-                    if (match.Status == MatchStatus.RoundEnded)
-                    {
-                        _engine.StartNextRound(match, _wordBank.GetRandomWord());
-                        roundStarted = true;
-                    }
-                }
-
-                if (roundStarted)
-                {
-                    await BroadcastAsync(match);
-                }
-            });
-        }
-
-        return dto;
+        return await BroadcastAsync(match);
     }
 
     private void StartLoop(string guidCode)
@@ -153,8 +135,6 @@ public sealed class InMemoryMatchService : IMatchService
 
     private async Task RunLoopAsync(string guidCode, CancellationToken cancellationToken)
     {
-        var revealCounter = 0;
-
         while (!cancellationToken.IsCancellationRequested)
         {
             try
@@ -168,7 +148,6 @@ public sealed class InMemoryMatchService : IMatchService
 
             var match = GetMatchState(guidCode);
             var shouldBroadcast = false;
-            var shouldAdvance = false;
 
             lock (match)
             {
@@ -196,66 +175,120 @@ public sealed class InMemoryMatchService : IMatchService
                     continue;
                 }
 
+                // Decrement timer and increment elapsed time
                 match.SecondsLeft = Math.Max(match.SecondsLeft - 1, 0);
-                revealCounter += 1;
+                match.ElapsedSecondsSinceSpin += 1;
                 shouldBroadcast = true;
 
-                if (revealCounter >= 8)
+                // Letter reveal logic (only during normal turns, not final guess)
+                // First letter is revealed immediately on spin (in ApplySpin)
+                // Reveal schedule:
+                // - 2nd letter at 5 seconds
+                // - 3rd letter at 10 seconds
+                // - Subsequent letters every LetterRevealIntervalSeconds (default 8s)
+                // - 3rd-to-last and 2nd-to-last letters at 10 second intervals
+                // - Stop when only 1 letter remains unrevealed
+                if (!match.IsFinalGuess)
                 {
-                    _engine.RevealNextLetter(match);
-                    revealCounter = 0;
+                    var elapsed = match.ElapsedSecondsSinceSpin;
+                    var currentRevealed = match.RevealedIndexes.Count;
+                    var totalLetters = match.CurrentWord.Length;
+                    var unrevealed = totalLetters - currentRevealed;
+
+                    // Only reveal if there's more than 1 letter remaining
+                    if (unrevealed > 1)
+                    {
+                        bool shouldReveal = false;
+
+                        if (currentRevealed == 1 && elapsed == 5)
+                        {
+                            // Reveal 2nd letter at exactly 5 seconds
+                            shouldReveal = true;
+                        }
+                        else if (currentRevealed == 2 && elapsed == 10)
+                        {
+                            // Reveal 3rd letter at exactly 10 seconds
+                            shouldReveal = true;
+                        }
+                        else if (currentRevealed >= 3)
+                        {
+                            // Calculate how many letters from the end this will be after reveal
+                            var lettersFromEndAfterReveal = totalLetters - (currentRevealed + 1);
+
+                            // Determine the interval to use
+                            int interval;
+                            if (lettersFromEndAfterReveal == 2 || lettersFromEndAfterReveal == 1)
+                            {
+                                // 3rd-to-last and 2nd-to-last use 10 second intervals
+                                interval = 10;
+                            }
+                            else
+                            {
+                                // All other letters use the standard interval (default 8s)
+                                interval = match.LetterRevealIntervalSeconds;
+                            }
+
+                            // Calculate expected reveal time based on cumulative intervals
+                            var baseTime = 10; // Start after the 3rd letter (at 10s)
+                            var cumulativeTime = baseTime;
+
+                            // Calculate the cumulative time for this letter position
+                            for (int i = 3; i < currentRevealed; i++)
+                            {
+                                var lettersFromEndAtPosition = totalLetters - (i + 1);
+                                if (lettersFromEndAtPosition == 2 || lettersFromEndAtPosition == 1)
+                                {
+                                    cumulativeTime += 10;
+                                }
+                                else
+                                {
+                                    cumulativeTime += match.LetterRevealIntervalSeconds;
+                                }
+                            }
+
+                            cumulativeTime += interval;
+
+                            if (elapsed == cumulativeTime)
+                            {
+                                shouldReveal = true;
+                            }
+                        }
+
+                        if (shouldReveal)
+                        {
+                            _engine.RevealNextLetter(match);
+                        }
+                    }
                 }
 
-                // Check if all letters revealed before rotating turn
-                if (match.RevealedIndexes.Count == match.CurrentWord.Length)
+                // Check if timer has expired
+                if (match.SecondsLeft == 0)
                 {
-                    if (match.CurrentRound >= match.MaxRounds)
+                    // If this is a final guess and timer runs out, end the round with no reward
+                    if (match.IsFinalGuess)
                     {
-                        var winner = match.Players.OrderByDescending(p => p.Score).First();
-                        _engine.FinishMatch(match, $"All letters were revealed. {winner.Name} wins the match.");
+                        if (match.CurrentRound >= match.MaxRounds)
+                        {
+                            var winner = match.Players.OrderByDescending(p => p.Score).First();
+                            _engine.FinishMatch(match, $"Final guess time expired. {winner.Name} wins the match.");
+                        }
+                        else
+                        {
+                            _engine.EndRound(match, "Final guess time expired. No reward given.");
+                            // Round will stay in RoundEnded status until next player spins
+                        }
                     }
                     else
                     {
-                        _engine.EndRound(match, "All letters were revealed. Starting next round.");
-                        shouldAdvance = true;
+                        // Normal timer expiry - rotate turn for final guess
+                        _engine.RotateTurn(match);
                     }
-                }
-                else if (match.SecondsLeft == 0)
-                {
-                    _engine.RotateTurn(match);
                 }
             }
 
             if (shouldBroadcast)
             {
                 await BroadcastAsync(match);
-            }
-
-            if (shouldAdvance)
-            {
-                try
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-
-                var roundStarted = false;
-                lock (match)
-                {
-                    if (match.Status == MatchStatus.RoundEnded)
-                    {
-                        _engine.StartNextRound(match, _wordBank.GetRandomWord());
-                        revealCounter = 0;
-                        roundStarted = true;
-                    }
-                }
-                if (roundStarted)
-                {
-                    await BroadcastAsync(match);
-                }
             }
         }
     }

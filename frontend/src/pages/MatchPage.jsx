@@ -11,6 +11,8 @@ export default function MatchPage() {
   const myTurn = matchState.activePlayerId === playerId
   const hasSpun = matchState.currentWheelValue != null
   const isInProgress = matchState.status === 'InProgress'
+  const isRoundEnded = matchState.status === 'RoundEnded'
+  const isFinalGuess = matchState.isFinalGuess || false
 
   function handleSpinStart() {
     setSpinPending(true)
@@ -67,14 +69,18 @@ export default function MatchPage() {
         {error && <p className="error">{error}</p>}
 
         <div className="actions">
-          {matchState.status === 'RoundEnded' && (
-            <p><em>Round ended — next round starting soon...</em></p>
+          {isRoundEnded && (
+            <p><em>Round ended — spin to start the next round.</em></p>
           )}
 
-          <button onClick={handleSpinButton} disabled={!myTurn || !isInProgress || hasSpun}>
+          {isFinalGuess && myTurn && (
+            <p><em style={{ color: '#ff6b35' }}>⚠️ Final Guess! The wheel value is locked.</em></p>
+          )}
+
+          <button onClick={handleSpinButton} disabled={!myTurn || (!isInProgress && !isRoundEnded) || (isInProgress && hasSpun) || isFinalGuess}>
             Spin
           </button>
-          <span>{matchState.currentWheelValue ? `+${matchState.currentWheelValue} points` : 'Spin to set points'}</span>
+          <span>{matchState.currentWheelValue ? `+${matchState.currentWheelValue} points` : 'Spin to lock in the reward and start the round.'}</span>
         </div>
 
         <form onSubmit={submitGuess} className="guess-form">
