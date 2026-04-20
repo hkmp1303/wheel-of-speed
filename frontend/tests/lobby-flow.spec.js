@@ -9,7 +9,7 @@ test('Players can create, join, and ready up to start the game', async ({ browse
   const bobPage = await bobContext.newPage();
 
   // 2. Alice creates the game
-  await alicePage.goto('http://localhost:5173'); // Your Vite dev server port
+  await alicePage.goto('/'); 
   await alicePage.fill('#host-name-input', 'Alice');
   await alicePage.click('#create-game-btn');
 
@@ -17,8 +17,8 @@ test('Players can create, join, and ready up to start the game', async ({ browse
   await expect(alicePage.locator('#lobby-status')).toContainText('Waiting for players');
   const inviteCode = await alicePage.locator('#invite-code-display').innerText();
 
-  // 3. Bob joins using the invite code
-  await bobPage.goto(`http://localhost:5173/join/${inviteCode}`);
+  // 3. Bob joins using the invite code (FIXED to relative path)
+  await bobPage.goto(`/join/${inviteCode}`);
   await bobPage.fill('#player-name-input', 'Bob');
   await bobPage.click('#join-game-btn');
 
@@ -34,3 +34,6 @@ test('Players can create, join, and ready up to start the game', async ({ browse
   await expect(alicePage.locator('#game-board')).toBeVisible();
   await expect(bobPage.locator('#game-board')).toBeVisible();
 });
+
+// NOTE: If you had other tests here (like the spin wheel test), 
+// make sure to paste them back in below this one!
