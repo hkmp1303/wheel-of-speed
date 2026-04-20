@@ -62,32 +62,31 @@ export default function MatchPage() {
           <PrizeWheel spinPending={spinPending} reward={matchState.currentWheelValue} />
           <div style={{ flex: 1 }}>
             <p className="word">{matchState.maskedWord || '_ _ _ _'}</p>
-            <p>{matchState.lastMessage}</p>
           </div>
         </div>
 
         {error && <p className="error">{error}</p>}
 
-        {/* Game Status Message */}
-        <div style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>
-          {isRoundEnded && (
-            <p><em>Round ended. {myTurn ? 'Spin to start the next round.' : 'Waiting for next player to spin.'}</em></p>
-          )}
-          {isFinalGuess && myTurn && (
-            <p><em style={{ color: '#ff6b35' }}>⚠️ Final Guess! The wheel value is locked. Make your guess!</em></p>
-          )}
-          {!isRoundEnded && !isFinalGuess && hasSpun && (
-            <p><em>Wheel Value: +{matchState.currentWheelValue} points</em></p>
-          )}
-          {!isRoundEnded && !isFinalGuess && !hasSpun && myTurn && (
-            <p><em>Spin the wheel to lock in your reward and reveal the first letter.</em></p>
-          )}
-        </div>
-
         <div className="actions">
           <button onClick={handleSpinButton} disabled={!myTurn || (!isInProgress && !isRoundEnded) || (isInProgress && hasSpun) || isFinalGuess}>
             Spin
           </button>
+        </div>
+
+        {/* Game Status Messages - separate from button */}
+        <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+          {isRoundEnded && matchState.lastMessage && (
+            <p><em style={{ color: matchState.lastMessageColor }}>{matchState.lastMessage}</em></p>
+          )}
+          {isFinalGuess && myTurn && (
+            <p><em style={{ color: '#ff6b35' }}>⚠️ Final Guess! The wheel value is locked. Make your guess!</em></p>
+          )}
+          {!isRoundEnded && !isFinalGuess && !hasSpun && myTurn && (
+            <p><em>Spin the wheel to lock in your reward and reveal the first letter.</em></p>
+          )}
+          {!isRoundEnded && matchState.lastMessage && (
+            <p><em style={{ color: matchState.lastMessageColor }}>{matchState.lastMessage}</em></p>
+          )}
         </div>
 
         <form onSubmit={submitGuess} className="guess-form">

@@ -36,6 +36,27 @@ public class MatchEngineTests
     }
 
     [Fact]
+    public void StartNextRound_ShouldResetMessageColorToDefault()
+    {
+        var match = BuildReadyMatch();
+        _engine.StartNextRound(match, "reactor");
+        _engine.ApplySpin(match, match.ActivePlayerId!, 300);
+
+        // Apply correct guess to set yellow color
+        var (_, updated) = _engine.ApplyGuess(match, match.ActivePlayerId!, "reactor");
+        updated.LastMessageColor.Should().Be("#ffd700");
+
+        // End the round
+        _engine.EndRound(updated, "Round finished");
+
+        // Start next round - should reset color to null
+        _engine.StartNextRound(updated, "network");
+
+        updated.LastMessageColor.Should().BeNull();
+        updated.LastMessage.Should().Contain("Round 2 started");
+    }
+
+    [Fact]
     public void ApplyGuess_ShouldAwardPointsWhenGuessIsCorrect()
     {
         var match = BuildReadyMatch();
@@ -47,6 +68,20 @@ public class MatchEngineTests
         isCorrect.Should().BeTrue();
         updated.Players[0].Score.Should().Be(300);
         updated.RoundResolved.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ApplyGuess_ShouldSetYellowColorForCorrectAnswer()
+    {
+        var match = BuildReadyMatch();
+        _engine.StartNextRound(match, "reactor");
+        _engine.ApplySpin(match, match.ActivePlayerId!, 300);
+
+        var (isCorrect, updated) = _engine.ApplyGuess(match, match.ActivePlayerId!, "reactor");
+
+        isCorrect.Should().BeTrue();
+        updated.LastMessageColor.Should().Be("#ffd700"); // Yellow color
+        updated.LastMessage.Should().Contain("Correct answer");
     }
 
     [Fact]
@@ -110,6 +145,28 @@ public class MatchEngineTests
 
         // IsFinalGuess should be cleared when round ends
         match.IsFinalGuess.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EndRound_ShouldPreserveCorrectAnswerMessageAndColor()
+    {
+        var match = BuildReadyMatch();
+        _engine.StartNextRound(match, "reactor");
+        _engine.ApplySpin(match, match.ActivePlayerId!, 300);
+
+        // Apply correct guess to set the message and color
+        var (_, updated) = _engine.ApplyGuess(match, match.ActivePlayerId!, "reactor");
+
+        // Verify message and color are set
+        updated.LastMessage.Should().Contain("Correct answer");
+        updated.LastMessageColor.Should().Be("#ffd700");
+
+        // Now call EndRound - it should preserve the message and color
+        _engine.EndRound(updated, "Round finished");
+
+        // Message and color should still be preserved
+        updated.LastMessage.Should().Contain("Correct answer");
+        updated.LastMessageColor.Should().Be("#ffd700");
     }
 
     [Fact]

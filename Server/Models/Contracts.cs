@@ -27,6 +27,7 @@ public sealed class MatchStateDto
     public string MaskedWord { get; init; } = string.Empty;
     public int? CurrentWheelValue { get; init; }
     public string? LastMessage { get; init; }
+    public string? LastMessageColor { get; init; }
     public IReadOnlyList<PlayerStateDto> Players { get; init; } = [];
     public bool IsFinalGuess { get; init; }
 }
@@ -54,6 +55,7 @@ public sealed class MatchState
     public HashSet<int> RevealedIndexes { get; set; } = [];
     public int? CurrentWheelValue { get; set; }
     public string? LastMessage { get; set; }
+    public string? LastMessageColor { get; set; }
     public List<PlayerState> Players { get; set; } = [];
     public bool RoundResolved { get; set; }
     public bool IsFinalGuess { get; set; }

@@ -267,14 +267,17 @@ public sealed class InMemoryMatchService : IMatchService
                     // If this is a final guess and timer runs out, end the round with no reward
                     if (match.IsFinalGuess)
                     {
+                        var activePlayerName = match.Players[match.ActivePlayerIndex].Name;
+                        var wheelValue = match.CurrentWheelValue ?? 0;
+
                         if (match.CurrentRound >= match.MaxRounds)
                         {
                             var winner = match.Players.OrderByDescending(p => p.Score).First();
-                            _engine.FinishMatch(match, $"Final guess time expired. {winner.Name} wins the match.");
+                            _engine.FinishMatch(match, $"{activePlayerName} failed to guess. No reward given. {winner.Name} wins the match!");
                         }
                         else
                         {
-                            _engine.EndRound(match, "Final guess time expired. No reward given.");
+                            _engine.EndRound(match, $"{activePlayerName} failed to guess. No one received the {wheelValue} points.");
                             // Round will stay in RoundEnded status until next player spins
                         }
                     }

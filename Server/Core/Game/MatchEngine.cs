@@ -87,6 +87,7 @@ public sealed class MatchEngine : IMatchEngine
         match.ActivePlayerIndex = (match.CurrentRound - 1) % match.Players.Count;
         match.ActivePlayerId = match.Players[match.ActivePlayerIndex].PlayerId;
         match.LastMessage = $"Round {match.CurrentRound} started.";
+        match.LastMessageColor = null; // Reset color to default (white)
         return match;
     }
 
@@ -210,7 +211,6 @@ public sealed class MatchEngine : IMatchEngine
 
         match.CurrentWheelValue = wheelValue;
         match.ElapsedSecondsSinceSpin = 0;
-        match.LastMessage = $"Wheel landed on {wheelValue} points.";
 
         // Reveal first letter immediately upon spin
         RevealNextLetter(match);
@@ -235,7 +235,10 @@ public sealed class MatchEngine : IMatchEngine
             var player = EnsurePlayer(match, playerId);
             player.Score += match.CurrentWheelValue.Value;
             match.RoundResolved = true;
-            match.LastMessage = $"{player.Name} guessed the word and won {match.CurrentWheelValue.Value} points.";
+
+            match.LastMessage = $"Correct answer, {player.Name} is awarded {match.CurrentWheelValue.Value} points.";
+            match.LastMessageColor = "#ffd700"; // Yellow color for correct answer
+
             return (true, match);
         }
 
@@ -267,7 +270,6 @@ public sealed class MatchEngine : IMatchEngine
 
         var nextIndex = remaining[Random.Shared.Next(remaining.Count)];
         match.RevealedIndexes.Add(nextIndex);
-        match.LastMessage = "A new letter was revealed.";
         return match;
     }
 
@@ -279,7 +281,13 @@ public sealed class MatchEngine : IMatchEngine
         match.SecondsLeft = 0;
         match.CurrentWheelValue = null;
         match.IsFinalGuess = false;
-        match.LastMessage = message;
+
+        // Only update message if one isn't already set (preserve correct answer message and its color)
+        if (string.IsNullOrEmpty(match.LastMessage))
+        {
+            match.LastMessage = message;
+            match.LastMessageColor = null;
+        }
 
         // Reveal all remaining letters so players can see the word
         RevealAllLetters(match);
@@ -339,6 +347,7 @@ public sealed class MatchEngine : IMatchEngine
             MaskedWord = BuildMaskedWord(match.CurrentWord, match.RevealedIndexes),
             CurrentWheelValue = match.CurrentWheelValue,
             LastMessage = match.LastMessage,
+            LastMessageColor = match.LastMessageColor,
             IsFinalGuess = match.IsFinalGuess,
             Players = match.Players.Select(p => new PlayerStateDto
             {

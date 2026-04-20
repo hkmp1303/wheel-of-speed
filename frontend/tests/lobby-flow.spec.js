@@ -88,11 +88,7 @@ test('active player can spin wheel and guess word', async ({ browser }) => {
   // Active player spins
   await activePage.getByRole('button', { name: 'Spin' }).click()
 
-  // Verify wheel value appears in status message (shows "Wheel Value: +X points")
-  const wheelValue = activePage.locator('p').filter({ hasText: /Wheel Value: \+\d+ points/ })
-  await expect(wheelValue).toBeVisible()
-
-  // Verify spin button is now disabled for active player
+  // Wait for spin to complete - verify spin button is now disabled for active player
   await expect(activePage.getByRole('button', { name: 'Spin' })).toBeDisabled()
 
   // Verify guess input is now enabled
