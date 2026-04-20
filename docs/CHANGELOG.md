@@ -107,6 +107,7 @@
     - Spin button disabled during final guess turns (`isFinalGuess` condition added)
     - **Spin button enabled after round ends:** Added logic to allow spinning when `status === 'RoundEnded'`
     - Updated spin button disabled condition: `!myTurn || (!isInProgress && !isRoundEnded) || (isInProgress && hasSpun) || isFinalGuess`
+    - **E2E test fix:** Updated `lobby-flow.spec.js` to look for new status message format
   - **Unit tests:**
     - Added `ApplySpin_ShouldRevealFirstLetterImmediately` test
     - Added `ApplyGuess_ShouldAllowMultipleGuesses_DuringFinalGuess` test (verifies multiple incorrect guesses don't end round)
