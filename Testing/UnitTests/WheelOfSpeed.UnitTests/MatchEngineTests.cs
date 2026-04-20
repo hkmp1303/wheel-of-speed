@@ -1,6 +1,6 @@
 using Xunit;
-using WheelOfSpeed.Server.Core.Game;
-using WheelOfSpeed.Server.Models;
+using WheelOfSpeed.Core.Game;
+using WheelOfSpeed.Models;  
 
 namespace WheelOfSpeed.UnitTests;
 
