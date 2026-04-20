@@ -97,13 +97,16 @@
       - Next round only begins when the next player spins the wheel
       - Creates natural pacing and ensures players see what the word was
   - **Frontend changes:**
-    - Added visual indicator when player has final guess: "⚠️ Final Guess! The wheel value is locked."
+    - **Unified status messaging:** Moved all status messages to single div above actions
+    - Context-aware messages based on game state:
+      - Round ended: "Round ended. Spin to start the next round." (active player) or "Waiting for next player to spin."
+      - Final guess: "⚠️ Final Guess! The wheel value is locked. Make your guess!"
+      - After spin: "Wheel Value: +X points"
+      - Before spin: "Spin the wheel to lock in your reward and reveal the first letter."
+    - Removed confusing multiple messages around spin button
     - Spin button disabled during final guess turns (`isFinalGuess` condition added)
-    - `isFinalGuess` state exposed from match context to frontend
     - **Spin button enabled after round ends:** Added logic to allow spinning when `status === 'RoundEnded'`
     - Updated spin button disabled condition: `!myTurn || (!isInProgress && !isRoundEnded) || (isInProgress && hasSpun) || isFinalGuess`
-    - Updated message when round ended: "Round ended — spin to start the next round."
-    - Updated spin button helper text: "Spin to lock in the reward and start the round."
   - **Unit tests:**
     - Added `ApplySpin_ShouldRevealFirstLetterImmediately` test
     - Added `ApplyGuess_ShouldAllowMultipleGuesses_DuringFinalGuess` test (verifies multiple incorrect guesses don't end round)

@@ -68,19 +68,26 @@ export default function MatchPage() {
 
         {error && <p className="error">{error}</p>}
 
-        <div className="actions">
+        {/* Game Status Message */}
+        <div style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>
           {isRoundEnded && (
-            <p><em>Round ended — spin to start the next round.</em></p>
+            <p><em>Round ended. {myTurn ? 'Spin to start the next round.' : 'Waiting for next player to spin.'}</em></p>
           )}
-
           {isFinalGuess && myTurn && (
-            <p><em style={{ color: '#ff6b35' }}>⚠️ Final Guess! The wheel value is locked.</em></p>
+            <p><em style={{ color: '#ff6b35' }}>⚠️ Final Guess! The wheel value is locked. Make your guess!</em></p>
           )}
+          {!isRoundEnded && !isFinalGuess && hasSpun && (
+            <p><em>Wheel Value: +{matchState.currentWheelValue} points</em></p>
+          )}
+          {!isRoundEnded && !isFinalGuess && !hasSpun && myTurn && (
+            <p><em>Spin the wheel to lock in your reward and reveal the first letter.</em></p>
+          )}
+        </div>
 
+        <div className="actions">
           <button onClick={handleSpinButton} disabled={!myTurn || (!isInProgress && !isRoundEnded) || (isInProgress && hasSpun) || isFinalGuess}>
             Spin
           </button>
-          <span>{matchState.currentWheelValue ? `+${matchState.currentWheelValue} points` : 'Spin to lock in the reward and start the round.'}</span>
         </div>
 
         <form onSubmit={submitGuess} className="guess-form">
