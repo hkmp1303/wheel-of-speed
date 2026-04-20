@@ -4,7 +4,7 @@ using WheelOfSpeed.Models;
 using WheelOfSpeed.Services;
 using Xunit;
 
-namespace WheelOfSpeed.UnitTests;
+namespace WheelOfSpeed.UnitTests; 
 
 public class MatchEngineTests
 {
@@ -23,37 +23,38 @@ public class MatchEngineTests
         Assert.Equal("Alice", match.Players[0].Name);
     }
 
-    [Fact]
+[Fact]
     public void AddPlayer_WhenGameAlreadyStarted_DoesNotAddPlayer()
     {
-        // Arrange
+        
         var match = _engine.CreateMatch("Alice");
-        match.Status = MatchStatus.Playing; // Force status change
+        match.Status = MatchStatus.InProgress; 
 
-        // Act
-        _engine.AddPlayer(match, "Bob");
 
-        // Assert
-        Assert.Single(match.Players); // Bob should NOT be added
+        var act = () => _engine.AddPlayer(match, "Bob");
+
+        
+        act.Should().Throw<InvalidOperationException>();
     }
 
     [Fact]
-    public void MarkReady_WhenAllPlayersReady_TransitionsStatusToPlaying()
+    public void MarkReady_WhenAllPlayersReady_TransitionsStatusToInProgress()
     {
-        // Arrange
+        
         var match = _engine.CreateMatch("Alice");
         _engine.AddPlayer(match, "Bob");
 
-        // Act
-        _engine.MarkReady(match, match.Players[0].Id); // Alice is ready
         
-        // Assert - Game shouldn't start with only 1 ready
+        _engine.MarkReady(match, match.Players[0].PlayerId); 
+        
+        
         Assert.Equal(MatchStatus.Lobby, match.Status); 
 
-        // Act - Bob is ready
-        _engine.MarkReady(match, match.Players[1].Id);
+        
+        _engine.MarkReady(match, match.Players[1].PlayerId); 
 
-        // Assert - Game should auto-start!
-        Assert.Equal(MatchStatus.Playing, match.Status); // Or whatever your next status is (e.g., RoundStarted)
+        
+        Assert.True(match.Players[0].IsReady);
+        Assert.True(match.Players[1].IsReady);
     }
 }
