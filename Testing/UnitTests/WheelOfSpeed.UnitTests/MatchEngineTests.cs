@@ -1,5 +1,5 @@
 using Xunit;
-using WheelOfSpeed.Core.Game;
+using WheelOfSpeed;
 using WheelOfSpeed.Models;  
 
 namespace WheelOfSpeed.UnitTests;
