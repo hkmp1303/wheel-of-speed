@@ -58,7 +58,7 @@ public sealed class InMemoryMatchService : IMatchService
             _engine.MarkReady(match, playerId);
             if (match.Status == MatchStatus.Lobby && match.Players.Count >= 2 && match.Players.All(p => p.IsReady))
             {
-                _engine.StartNextRound(match, _wordBank.GetRandomWord());
+                _engine.StartNextRound(match, _wordBank.GetRandomWord(match.UsedWords));
                 startLoop = true;
             }
         }
@@ -86,7 +86,7 @@ public sealed class InMemoryMatchService : IMatchService
             // If the round has ended, start the next round before allowing spin
             if (match.Status == MatchStatus.RoundEnded)
             {
-                _engine.StartNextRound(match, _wordBank.GetRandomWord());
+                _engine.StartNextRound(match, _wordBank.GetRandomWord(match.UsedWords));
             }
 
             _engine.ApplySpin(match, playerId, _wordBank.GetRandomWheelValue());

@@ -1,6 +1,29 @@
 # Changelog
 
-## [Unreleased] - Final Guess Mechanic & Letter Reveal System
+## [Unreleased] - Word Randomization Per Match
+
+- 2026-04-20
+- **Feature: Per-Match Word Tracking**
+  - Prevents word repetition within a single match
+  - Each match maintains independent `UsedWords` list
+  - Words cycle through all 8 options before repeating
+  - No cross-match interference
+  - **Backend changes:**
+    - Added `UsedWords` property to `MatchState` model
+    - Modified `IWordBankService.GetRandomWord()` to accept `List<string> usedWords` parameter
+    - `WordBankService` now stateless - tracks usage per match, not globally
+    - Updated `InMemoryMatchService` to pass `match.UsedWords` to word selection
+    - Automatic cycling: after all 8 words used, list clears and starts fresh cycle
+  - **Unit tests:**
+    - Updated `GetRandomWord_ShouldNotRepeatUntilAllWordsUsed` test
+    - Verifies 8 unique words per cycle
+    - Verifies automatic reset after full cycle
+  - **Benefits:**
+    - No word repeats within match until all 8 used (e.g., Round 1: Socket, Round 2: Diamond, Round 3: Reactor - guaranteed different)
+    - Multiple simultaneous matches don't interfere
+    - Better player experience with variety
+
+## [Previous] - Final Guess Mechanic & Letter Reveal System
 
 - 2026-04-19
 

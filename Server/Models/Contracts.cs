@@ -59,6 +59,7 @@ public sealed class MatchState
     public bool IsFinalGuess { get; set; }
     public int ElapsedSecondsSinceSpin { get; set; } = 0;
     public int LetterRevealIntervalSeconds { get; set; } = 8;
+    public List<string> UsedWords { get; set; } = [];
 }
 
 public sealed class PlayerState
