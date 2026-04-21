@@ -4,7 +4,7 @@ namespace WheelOfSpeed.Services;
 
 public interface IWordBankService
 {
-    string GetRandomWord(Difficulty difficulty = Difficulty.Normal);
+    string GetRandomWord(List<string> usedWords, Difficulty difficulty = Difficulty.Normal);
     int GetRandomWheelValue();
 }
 
@@ -148,17 +148,32 @@ public sealed class WordBankService : IWordBankService
 
     private static readonly int[] WheelValues = [100, 200, 300, 400, 500];
 
-    public string GetRandomWord(Difficulty difficulty = Difficulty.Normal)
+    public string GetRandomWord(List<string> usedWords, Difficulty difficulty = Difficulty.Normal)
     {
         var words = difficulty switch
         {
-            Difficulty.Easy   => EasyWords,
+            Difficulty.Easy => EasyWords,
             Difficulty.Normal => NormalWords,
-            Difficulty.Hard   => HardWords,
-            _                 => NormalWords
+            Difficulty.Hard => HardWords,
+            _ => NormalWords
         };
 
-        return words[Random.Shared.Next(words.Length)];
+        // If we've used all words, reset the used list for a new cycle
+        if (usedWords.Count >= words.Length)
+        {
+            usedWords.Clear();
+        }
+
+        // Get available words (not yet used in this cycle)
+        var availableWords = words.Where(w => !usedWords.Contains(w)).ToArray();
+
+        // Select random word from available pool
+        var word = availableWords[Random.Shared.Next(availableWords.Length)];
+
+        // Track this word as used
+        usedWords.Add(word);
+
+        return word;
     }
 
     public int GetRandomWheelValue() =>

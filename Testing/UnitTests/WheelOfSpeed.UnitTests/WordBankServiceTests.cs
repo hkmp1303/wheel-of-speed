@@ -1,6 +1,6 @@
+using FluentAssertions;
 using WheelOfSpeed.Models;
 using WheelOfSpeed.Services;
-using FluentAssertions;
 using Xunit;
 
 namespace WheelOfSpeed.UnitTests;
@@ -9,25 +9,29 @@ public class WordBankServiceTests
 {
     private readonly WordBankService _service = new();
 
+
     [Fact]
     public void GetRandomWord_Easy_ShouldReturnNonEmptyString()
     {
-        var word = _service.GetRandomWord(Difficulty.Easy);
+        var usedWords = new List<string>();
+        var word = _service.GetRandomWord(usedWords, Difficulty.Easy);
         word.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
     public void GetRandomWord_Easy_ShouldReturnFourLetterWord()
     {
-        var word = _service.GetRandomWord(Difficulty.Easy);
+        var usedWords = new List<string>();
+        var word = _service.GetRandomWord(usedWords, Difficulty.Easy);
         word.Should().HaveLength(4);
     }
 
     [Fact]
     public void GetRandomWord_Easy_ShouldReturnVariedWords()
     {
+        var usedWords = new List<string>();
         var results = Enumerable.Range(0, 50)
-            .Select(_ => _service.GetRandomWord(Difficulty.Easy))
+            .Select(_ => _service.GetRandomWord(usedWords, Difficulty.Easy))
             .Distinct()
             .ToList();
         results.Should().HaveCountGreaterThan(1);
@@ -36,22 +40,25 @@ public class WordBankServiceTests
     [Fact]
     public void GetRandomWord_Normal_ShouldReturnNonEmptyString()
     {
-        var word = _service.GetRandomWord(Difficulty.Normal);
+        var usedWords = new List<string>();
+        var word = _service.GetRandomWord(usedWords, Difficulty.Normal);
         word.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
     public void GetRandomWord_Normal_ShouldReturnSixLetterWord()
     {
-        var word = _service.GetRandomWord(Difficulty.Normal);
+        var usedWords = new List<string>();
+        var word = _service.GetRandomWord(usedWords, Difficulty.Normal);
         word.Should().HaveLength(6);
     }
 
     [Fact]
     public void GetRandomWord_Normal_ShouldReturnVariedWords()
     {
+        var usedWords = new List<string>();
         var results = Enumerable.Range(0, 50)
-            .Select(_ => _service.GetRandomWord(Difficulty.Normal))
+            .Select(_ => _service.GetRandomWord(usedWords, Difficulty.Normal))
             .Distinct()
             .ToList();
         results.Should().HaveCountGreaterThan(1);
@@ -60,22 +67,25 @@ public class WordBankServiceTests
     [Fact]
     public void GetRandomWord_Hard_ShouldReturnNonEmptyString()
     {
-        var word = _service.GetRandomWord(Difficulty.Hard);
+        var usedWords = new List<string>();
+        var word = _service.GetRandomWord(usedWords, Difficulty.Hard);
         word.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
     public void GetRandomWord_Hard_ShouldReturnEightLetterWord()
     {
-        var word = _service.GetRandomWord(Difficulty.Hard);
+        var usedWords = new List<string>();
+        var word = _service.GetRandomWord(usedWords, Difficulty.Hard);
         word.Should().HaveLength(8);
     }
 
     [Fact]
     public void GetRandomWord_Hard_ShouldReturnVariedWords()
     {
+        var usedWords = new List<string>();
         var results = Enumerable.Range(0, 50)
-            .Select(_ => _service.GetRandomWord(Difficulty.Hard))
+            .Select(_ => _service.GetRandomWord(usedWords, Difficulty.Hard))
             .Distinct()
             .ToList();
         results.Should().HaveCountGreaterThan(1);
@@ -84,16 +94,22 @@ public class WordBankServiceTests
     [Fact]
     public void GetRandomWord_Default_ShouldReturnNormalWord()
     {
-        var word = _service.GetRandomWord();
+        var usedWords = new List<string>();
+        var word = _service.GetRandomWord(usedWords);
         word.Should().HaveLength(6);
     }
 
     [Fact]
     public void GetRandomWheelValue_ShouldReturnValidValue()
     {
+        var service = new WordBankService();
         var validValues = new[] { 100, 200, 300, 400, 500 };
-        var value = _service.GetRandomWheelValue();
-        validValues.Should().Contain(value);
+        // test 20 random wheel values
+        for (int i = 0; i < 20; i++)
+        {
+            var value = service.GetRandomWheelValue();
+            validValues.Should().Contain(value);
+        }
     }
 
     [Fact]

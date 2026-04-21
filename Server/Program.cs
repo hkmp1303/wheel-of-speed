@@ -36,6 +36,39 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.UseCors();
 
+// Ensure CORS response headers are present on all responses, including
+// error responses. Use a lightweight middleware that echoes the request
+// Origin when present (required when AllowCredentials is used) and
+// short-circuits OPTIONS preflight requests.
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() => {
+        var origin = context.Request.Headers["Origin"].ToString();
+        if (!string.IsNullOrEmpty(origin))
+        {
+            context.Response.Headers["Access-Control-Allow-Origin"] = origin;
+        }
+        else
+        {
+            context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+        }
+
+        context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
+        context.Response.Headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS";
+        context.Response.Headers["Access-Control-Allow-Credentials"] = "true";
+        return Task.CompletedTask;
+    });
+
+    if (HttpMethods.IsOptions(context.Request.Method))
+    {
+        // Return 204 for preflight
+        context.Response.StatusCode = StatusCodes.Status204NoContent;
+        return;
+    }
+
+    await next();
+});
+
 app.Use(async (context, next) =>
 {
     try

@@ -1,14 +1,13 @@
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap");
+@import url("colors.css");
 
 :root {
   font-family: "Orbitron", system-ui, sans-serif;
-  color: #f5f7fb;
-  background: #0a0e1a;
-  --accent-primary: #4f9dff;
-  --accent-secondary: #f5c542;
-  --accent-danger: #ff4f4f;
-  --glow-primary: 0 0 20px rgba(79, 157, 255, 0.6);
-  --glow-secondary: 0 0 15px rgba(245, 197, 66, 0.6);
+  color: var(--color-text-light);
+  background: var(--color-bg-dark);
+  --accent-primary: var(--color-accent-primary);
+  --accent-secondary: var(--color-accent-secondary);
+  --accent-danger: var(--color-accent-danger);
 }
 
 * {
@@ -36,7 +35,7 @@ input {
 
 .card {
   width: min(100%, 720px);
-  background: #0f131f;
+  background: var(--color-bg-card);
   border: 2px solid rgba(79, 157, 255, 0.3);
   border-radius: 18px;
   padding: 2rem;
@@ -67,7 +66,7 @@ input {
   font-weight: 400;
   letter-spacing: 0.1em;
   margin: 0;
-  color: #f5f7fb;
+  color: var(--color-text-light);
   text-shadow: var(--glow-primary), var(--glow-primary);
   animation: glow-pulse 2s ease-in-out infinite;
   line-height: 1.2;
@@ -80,7 +79,7 @@ input {
   50% {
     text-shadow:
       var(--glow-primary),
-      0 0 40px rgba(79, 157, 255, 0.8);
+      var(--glow-primary-enhanced);
   }
 }
 .actions {
@@ -99,8 +98,8 @@ input {
   width: 100%;
   padding: 0.8rem 1rem;
   border-radius: 12px;
-  border: 1px solid #354155;
-  background: #0f131a;
+  border: 1px solid var(--color-border-input);
+  background: var(--color-bg-input);
   color: white;
 }
 button {
@@ -121,11 +120,11 @@ button {
 }
 button:hover:not(:disabled) {
   background: var(--accent-primary);
-  color: #0a0e1a;
+  color: var(--color-bg-dark);
   transform: scale(1.05);
   box-shadow:
     var(--glow-primary),
-    0 0 30px rgba(79, 157, 255, 0.8);
+    var(--glow-primary-enhanced);
 }
 button:active:not(:disabled) {
   transform: scale(0.98);
@@ -133,9 +132,9 @@ button:active:not(:disabled) {
 button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-  border-color: #555;
+  border-color: var(--color-border-disabled);
   box-shadow: none;
-  color: #888;
+  color: var(--color-text-disabled);
 }
 .list {
   list-style: none;
@@ -149,7 +148,7 @@ button:disabled {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.8rem 1rem;
-  background: #0f131a;
+  background: var(--color-bg-input);
   border-radius: 12px;
 }
 .word {
@@ -160,11 +159,11 @@ button:disabled {
 .ending-box {
   padding: 1rem;
   border-radius: 12px;
-  background: #101826;
+  background: var(--color-bg-ending-box);
 }
 hr {
   border: 0;
-  border-top: 1px solid #2b3342;
+  border-top: 1px solid var(--color-border-hr);
   margin: 1.25rem 0;
 }
 label {
@@ -192,4 +191,56 @@ label {
   font-weight: 700;
   text-transform: uppercase;
   color: #f5f7fb;
+}
+.messages {
+  margin-top: 1rem;
+  text-align: center;
+  min-height: 52px;
+}
+
+/* Message styling classes */
+.correct-answer {
+  color: var(--color-status-correct);
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+.final-guess-warning {
+  color: var(--color-status-warning);
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.6);
+}
+
+.incorrect-guess-active {
+  color: var(--color-status-warning);
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+  animation: pulse-active 0.5s ease;
+}
+
+@keyframes pulse-active {
+  0% {
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(255, 107, 53, 0.8);
+  }
+  100% {
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+  }
+}
+
+.incorrect-guess-opponent {
+  color: var(--color-text-disabled);
+  font-weight: 600;
+  font-size: 0.95em;
+  opacity: 0.8;
+}
+.reward-display {
+  min-height: 20px;
+}
+.hidden {
+  visibility: hidden;
 }

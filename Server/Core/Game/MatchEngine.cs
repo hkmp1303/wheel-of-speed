@@ -12,6 +12,7 @@ public interface IMatchEngine
     MatchState ApplySpin(MatchState match, string playerId, int wheelValue);
     (bool IsCorrect, MatchState UpdatedMatch) ApplyGuess(MatchState match, string playerId, string guess);
     MatchState RevealNextLetter(MatchState match);
+    MatchState RevealAllLetters(MatchState match);
     MatchState EndRound(MatchState match, string message);
     MatchState FinishMatch(MatchState match, string message);
     MatchStateDto ToDto(MatchState match);
@@ -75,13 +76,84 @@ public sealed class MatchEngine : IMatchEngine
         match.CurrentRound += 1;
         match.CurrentWord = word.ToUpperInvariant();
         match.RevealedIndexes = [];
-        match.SecondsLeft = 45;
+
+        // Calculate timer based on word length
+        match.SecondsLeft = CalculateTimerForWord(match.CurrentWord.Length, match.LetterRevealIntervalSeconds);
+
         match.CurrentWheelValue = null;
         match.RoundResolved = false;
+        match.IsFinalGuess = false;
+        match.ElapsedSecondsSinceSpin = 0;
         match.ActivePlayerIndex = (match.CurrentRound - 1) % match.Players.Count;
         match.ActivePlayerId = match.Players[match.ActivePlayerIndex].PlayerId;
         match.LastMessage = $"Round {match.CurrentRound} started.";
+        match.LastMessageClass = null; // Reset color to default (white)
         return match;
+    }
+
+    /// <summary>
+    /// Calculates the timer duration based on word length.
+    /// Includes time for all letter reveals plus 10 seconds buffer after 2nd-to-last letter.
+    /// </summary>
+    private int CalculateTimerForWord(int wordLength, int standardInterval)
+    {
+        if (wordLength < 2) return 30; // Minimum timer for very short words
+
+        // Calculate time when 2nd-to-last letter (all but 1) will be revealed
+        // Letter reveal schedule:
+        // 1st: 0s (on spin)
+        // 2nd: 5s
+        // 3rd: 10s
+        // 4th+: every standardInterval (8s default)
+        // 3rd-to-last and 2nd-to-last: 10s intervals
+
+        int timeToRevealSecondToLast = 0;
+
+        if (wordLength == 2)
+        {
+            // Only 1 letter will be revealed (1st on spin), 2nd-to-last is revealed at 0s
+            timeToRevealSecondToLast = 0;
+        }
+        else if (wordLength == 3)
+        {
+            // 1st at 0s, 2nd at 5s (this is 2nd-to-last)
+            timeToRevealSecondToLast = 5;
+        }
+        else if (wordLength == 4)
+        {
+            // 1st at 0s, 2nd at 5s, 3rd at 10s (this is 2nd-to-last)
+            timeToRevealSecondToLast = 10;
+        }
+        else
+        {
+            // For longer words, calculate cumulative time
+            int time = 10; // Start after 3rd letter at 10s
+            int lettersRevealed = 3; // Already revealed 1st, 2nd, 3rd
+            int lettersToReveal = wordLength - 1; // Total letters to reveal (all but last)
+
+            // Reveal letters 4 through (wordLength - 1)
+            while (lettersRevealed < lettersToReveal)
+            {
+                int lettersFromEnd = wordLength - (lettersRevealed + 1);
+
+                // 3rd-to-last and 2nd-to-last use 10s intervals
+                if (lettersFromEnd == 2 || lettersFromEnd == 1)
+                {
+                    time += 10;
+                }
+                else
+                {
+                    time += standardInterval;
+                }
+
+                lettersRevealed++;
+            }
+
+            timeToRevealSecondToLast = time;
+        }
+
+        // Add 10 second buffer after 2nd-to-last letter revealed
+        return timeToRevealSecondToLast + 10;
     }
 
     public MatchState RotateTurn(MatchState match)
@@ -93,11 +165,31 @@ public sealed class MatchEngine : IMatchEngine
             throw new InvalidOperationException("Cannot rotate turn after the round has been resolved.");
         }
 
+        // Check if the previous turn had a wheel value (player spun but didn't guess correctly)
+        // If so, give the next player a final guess opportunity with the locked wheel value
+        var hadWheelValue = match.CurrentWheelValue.HasValue;
+
         match.ActivePlayerIndex = (match.ActivePlayerIndex + 1) % match.Players.Count;
         match.ActivePlayerId = match.Players[match.ActivePlayerIndex].PlayerId;
-        match.SecondsLeft = 45;
-        match.CurrentWheelValue = null;
-        match.LastMessage = $"It is now {match.Players[match.ActivePlayerIndex].Name}'s turn.";
+
+        if (hadWheelValue && !match.IsFinalGuess)
+        {
+            // This is a final guess turn - give 20 seconds and keep the wheel value locked
+            match.SecondsLeft = 20;
+            match.IsFinalGuess = true;
+            match.ElapsedSecondsSinceSpin = 0; // Reset elapsed time for final guess
+            match.LastMessage = $"{match.Players[match.ActivePlayerIndex].Name} has a final guess with the locked wheel value!";
+        }
+        else
+        {
+            // Normal turn rotation - reset to 45 seconds and clear wheel value
+            match.SecondsLeft = 45;
+            match.CurrentWheelValue = null;
+            match.IsFinalGuess = false;
+            match.ElapsedSecondsSinceSpin = 0;
+            match.LastMessage = $"It is now {match.Players[match.ActivePlayerIndex].Name}'s turn.";
+        }
+
         return match;
     }
 
@@ -107,13 +199,22 @@ public sealed class MatchEngine : IMatchEngine
         EnsureInProgress(match);
         EnsureActivePlayer(match, playerId);
 
+        if (match.IsFinalGuess)
+        {
+            throw new InvalidOperationException("Cannot spin the wheel during a final guess. The wheel value is locked.");
+        }
+
         if (match.CurrentWheelValue is not null)
         {
             throw new InvalidOperationException("You have already spun the wheel this turn.");
         }
 
         match.CurrentWheelValue = wheelValue;
-        match.LastMessage = $"Wheel landed on {wheelValue} points.";
+        match.ElapsedSecondsSinceSpin = 0;
+
+        // Reveal first letter immediately upon spin
+        RevealNextLetter(match);
+
         return match;
     }
 
@@ -129,16 +230,32 @@ public sealed class MatchEngine : IMatchEngine
             throw new InvalidOperationException("You must spin the wheel before guessing.");
         }
 
-        if (string.Equals(match.CurrentWord, guess.Trim(), StringComparison.OrdinalIgnoreCase))
+        var trimmedGuess = guess.Trim();
+        match.LastGuessedWord = trimmedGuess.ToUpperInvariant();
+
+        if (string.Equals(match.CurrentWord, trimmedGuess, StringComparison.OrdinalIgnoreCase))
         {
             var player = EnsurePlayer(match, playerId);
             player.Score += match.CurrentWheelValue.Value;
             match.RoundResolved = true;
-            match.LastMessage = $"{player.Name} guessed the word and won {match.CurrentWheelValue.Value} points.";
+
+            match.LastMessage = $"Correct answer, {player.Name} is awarded {match.CurrentWheelValue.Value} points.";
+            match.LastMessageClass = "correct-answer"; // CSS class for correct answer styling
+
             return (true, match);
         }
 
-        match.LastMessage = "Incorrect guess. Keep going.";
+        // Incorrect guess - allow player to keep guessing
+        // During final guess, player can make multiple guesses until timer expires
+        if (match.IsFinalGuess)
+        {
+            match.LastMessage = "Incorrect guess. Try again!";
+        }
+        else
+        {
+            match.LastMessage = "Incorrect guess. Keep going.";
+        }
+
         return (false, match);
     }
 
@@ -156,7 +273,6 @@ public sealed class MatchEngine : IMatchEngine
 
         var nextIndex = remaining[Random.Shared.Next(remaining.Count)];
         match.RevealedIndexes.Add(nextIndex);
-        match.LastMessage = "A new letter was revealed.";
         return match;
     }
 
@@ -167,7 +283,36 @@ public sealed class MatchEngine : IMatchEngine
         match.Status = MatchStatus.RoundEnded;
         match.SecondsLeft = 0;
         match.CurrentWheelValue = null;
-        match.LastMessage = message;
+        match.IsFinalGuess = false;
+
+        // Only update message if one isn't already set (preserve correct answer message and its styling)
+        if (string.IsNullOrEmpty(match.LastMessage))
+        {
+            match.LastMessage = message;
+            match.LastMessageClass = null;
+        }
+
+        // Reveal all remaining letters so players can see the word
+        RevealAllLetters(match);
+
+        // Set active player to whoever will start the NEXT round
+        // This is based on the next round number, using the same logic as StartNextRound
+        var nextRoundNumber = match.CurrentRound + 1;
+        match.ActivePlayerIndex = (nextRoundNumber - 1) % match.Players.Count;
+        match.ActivePlayerId = match.Players[match.ActivePlayerIndex].PlayerId;
+
+        return match;
+    }
+
+    /// <summary>
+    /// Reveals all letters in the current word.
+    /// </summary>
+    public MatchState RevealAllLetters(MatchState match)
+    {
+        for (int i = 0; i < match.CurrentWord.Length; i++)
+        {
+            match.RevealedIndexes.Add(i);
+        }
         return match;
     }
 
@@ -181,7 +326,19 @@ public sealed class MatchEngine : IMatchEngine
         match.Status = MatchStatus.Finished;
         match.SecondsLeft = 0;
         match.CurrentWheelValue = null;
-        match.LastMessage = message;
+        match.IsFinalGuess = false;
+
+        // Only update message if one isn't already set (preserve correct answer message and its styling)
+        if (string.IsNullOrEmpty(match.LastMessage))
+        {
+            match.LastMessage = null;
+        }
+
+        match.GameOverMessage = message;
+
+        // Reveal all remaining letters so players can see the final word
+        RevealAllLetters(match);
+
         return match;
     }
 
@@ -200,6 +357,10 @@ public sealed class MatchEngine : IMatchEngine
             MaskedWord = BuildMaskedWord(match.CurrentWord, match.RevealedIndexes),
             CurrentWheelValue = match.CurrentWheelValue,
             LastMessage = match.LastMessage,
+            LastMessageClass = match.LastMessageClass,
+            GameOverMessage = match.GameOverMessage,
+            LastGuessedWord = match.LastGuessedWord,
+            IsFinalGuess = match.IsFinalGuess,
             Players = match.Players.Select(p => new PlayerStateDto
             {
                 PlayerId = p.PlayerId,
@@ -251,5 +412,18 @@ public sealed class MatchEngine : IMatchEngine
         {
             throw new InvalidOperationException("It is not this player's turn.");
         }
+    }
+
+    private static readonly int[] WheelValues = new[] { 50, 100, 200, 300, 500, 1000 };
+
+    /// <summary>
+    /// Generate a wheel reward amount.
+    /// Optional seed parameter for deterministic testing.
+    /// </summary>
+    public int GenerateSpinReward(int? seed = null)
+    {
+        var rnd = seed.HasValue ? new Random(seed.Value) : new Random();
+        var idx = rnd.Next(0, WheelValues.Length);
+        return WheelValues[idx];
     }
 }

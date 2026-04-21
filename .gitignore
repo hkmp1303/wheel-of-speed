@@ -1,3 +1,7 @@
+# Local logs
+/frontend.log
+/backend.log
+
 **/bin/
 **/obj/
 **/node_modules/
