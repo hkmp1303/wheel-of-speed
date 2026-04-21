@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: wheel-of-speed-api
+    runtime: docker
+    rootDir: .
+    dockerfilePath: ./Server/Dockerfile
+    branch: feature/deploy
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+  - type: static
+    name: wheel-of-speed-frontend
+    rootDir: ./frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    branch: feature/deploy
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false

@@ -3,8 +3,11 @@ import { useGame } from "../context/GameContext";
 
 export default function HomePage() {
   const { createMatch, joinMatch } = useGame();
+  const pathMatch = window.location.pathname.match(/^\/join\/([^/]+)$/i);
+  const initialJoinCode = pathMatch?.[1]?.toUpperCase() ?? "";
+  const isJoinFlow = Boolean(initialJoinCode);
   const [name, setName] = useState("");
-  const [joinCode, setJoinCode] = useState("");
+  const [joinCode, setJoinCode] = useState(initialJoinCode);
   const [difficulty, setDifficulty] = useState("Normal");
 
   return (
@@ -15,6 +18,7 @@ export default function HomePage() {
 
         <label>Namn</label>
         <input
+          id={isJoinFlow ? "player-name-input" : "host-name-input"}
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Ange namn"
@@ -42,17 +46,20 @@ export default function HomePage() {
           </button>
         </div>
 
-        <hr />
+        {!isJoinFlow && <hr />}
 
         <label>Join via code</label>
         <input
+          id="join-code-input"
           value={joinCode}
           onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
           placeholder="GUID code"
+          readOnly={isJoinFlow}
         />
 
         <div className="actions">
           <button
+            id="join-game-btn"
             onClick={() => joinMatch(joinCode, name)}
             disabled={!name.trim() || !joinCode.trim()}
           >
