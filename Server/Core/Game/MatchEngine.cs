@@ -87,7 +87,7 @@ public sealed class MatchEngine : IMatchEngine
         match.ActivePlayerIndex = (match.CurrentRound - 1) % match.Players.Count;
         match.ActivePlayerId = match.Players[match.ActivePlayerIndex].PlayerId;
         match.LastMessage = $"Round {match.CurrentRound} started.";
-        match.LastMessageColor = null; // Reset color to default (white)
+        match.LastMessageClass = null; // Reset color to default (white)
         return match;
     }
 
@@ -230,14 +230,17 @@ public sealed class MatchEngine : IMatchEngine
             throw new InvalidOperationException("You must spin the wheel before guessing.");
         }
 
-        if (string.Equals(match.CurrentWord, guess.Trim(), StringComparison.OrdinalIgnoreCase))
+        var trimmedGuess = guess.Trim();
+        match.LastGuessedWord = trimmedGuess.ToUpperInvariant();
+
+        if (string.Equals(match.CurrentWord, trimmedGuess, StringComparison.OrdinalIgnoreCase))
         {
             var player = EnsurePlayer(match, playerId);
             player.Score += match.CurrentWheelValue.Value;
             match.RoundResolved = true;
 
             match.LastMessage = $"Correct answer, {player.Name} is awarded {match.CurrentWheelValue.Value} points.";
-            match.LastMessageColor = "#ffd700"; // Yellow color for correct answer
+            match.LastMessageClass = "correct-answer"; // CSS class for correct answer styling
 
             return (true, match);
         }
@@ -282,11 +285,11 @@ public sealed class MatchEngine : IMatchEngine
         match.CurrentWheelValue = null;
         match.IsFinalGuess = false;
 
-        // Only update message if one isn't already set (preserve correct answer message and its color)
+        // Only update message if one isn't already set (preserve correct answer message and its styling)
         if (string.IsNullOrEmpty(match.LastMessage))
         {
             match.LastMessage = message;
-            match.LastMessageColor = null;
+            match.LastMessageClass = null;
         }
 
         // Reveal all remaining letters so players can see the word
@@ -324,7 +327,14 @@ public sealed class MatchEngine : IMatchEngine
         match.SecondsLeft = 0;
         match.CurrentWheelValue = null;
         match.IsFinalGuess = false;
-        match.LastMessage = message;
+
+        // Only update message if one isn't already set (preserve correct answer message and its styling)
+        if (string.IsNullOrEmpty(match.LastMessage))
+        {
+            match.LastMessage = null;
+        }
+
+        match.GameOverMessage = message;
 
         // Reveal all remaining letters so players can see the final word
         RevealAllLetters(match);
@@ -347,7 +357,9 @@ public sealed class MatchEngine : IMatchEngine
             MaskedWord = BuildMaskedWord(match.CurrentWord, match.RevealedIndexes),
             CurrentWheelValue = match.CurrentWheelValue,
             LastMessage = match.LastMessage,
-            LastMessageColor = match.LastMessageColor,
+            LastMessageClass = match.LastMessageClass,
+            GameOverMessage = match.GameOverMessage,
+            LastGuessedWord = match.LastGuessedWord,
             IsFinalGuess = match.IsFinalGuess,
             Players = match.Players.Select(p => new PlayerStateDto
             {

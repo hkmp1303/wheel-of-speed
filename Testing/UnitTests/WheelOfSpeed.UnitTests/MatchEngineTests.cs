@@ -36,23 +36,23 @@ public class MatchEngineTests
     }
 
     [Fact]
-    public void StartNextRound_ShouldResetMessageColorToDefault()
+    public void StartNextRound_ShouldResetMessageClassToDefault()
     {
         var match = BuildReadyMatch();
         _engine.StartNextRound(match, "reactor");
         _engine.ApplySpin(match, match.ActivePlayerId!, 300);
 
-        // Apply correct guess to set yellow color
+        // Apply correct guess to set styling class
         var (_, updated) = _engine.ApplyGuess(match, match.ActivePlayerId!, "reactor");
-        updated.LastMessageColor.Should().Be("#ffd700");
+        updated.LastMessageClass.Should().Be("correct-answer");
 
         // End the round
         _engine.EndRound(updated, "Round finished");
 
-        // Start next round - should reset color to null
+        // Start next round - should reset class to null
         _engine.StartNextRound(updated, "network");
 
-        updated.LastMessageColor.Should().BeNull();
+        updated.LastMessageClass.Should().BeNull();
         updated.LastMessage.Should().Contain("Round 2 started");
     }
 
@@ -71,7 +71,7 @@ public class MatchEngineTests
     }
 
     [Fact]
-    public void ApplyGuess_ShouldSetYellowColorForCorrectAnswer()
+    public void ApplyGuess_ShouldSetCorrectAnswerClassForCorrectAnswer()
     {
         var match = BuildReadyMatch();
         _engine.StartNextRound(match, "reactor");
@@ -80,7 +80,7 @@ public class MatchEngineTests
         var (isCorrect, updated) = _engine.ApplyGuess(match, match.ActivePlayerId!, "reactor");
 
         isCorrect.Should().BeTrue();
-        updated.LastMessageColor.Should().Be("#ffd700"); // Yellow color
+        updated.LastMessageClass.Should().Be("correct-answer"); // Correct answer styling class
         updated.LastMessage.Should().Contain("Correct answer");
     }
 
@@ -148,25 +148,25 @@ public class MatchEngineTests
     }
 
     [Fact]
-    public void EndRound_ShouldPreserveCorrectAnswerMessageAndColor()
+    public void EndRound_ShouldPreserveCorrectAnswerMessageAndClass()
     {
         var match = BuildReadyMatch();
         _engine.StartNextRound(match, "reactor");
         _engine.ApplySpin(match, match.ActivePlayerId!, 300);
 
-        // Apply correct guess to set the message and color
+        // Apply correct guess to set the message and styling class
         var (_, updated) = _engine.ApplyGuess(match, match.ActivePlayerId!, "reactor");
 
-        // Verify message and color are set
+        // Verify message and class are set
         updated.LastMessage.Should().Contain("Correct answer");
-        updated.LastMessageColor.Should().Be("#ffd700");
+        updated.LastMessageClass.Should().Be("correct-answer");
 
-        // Now call EndRound - it should preserve the message and color
+        // Now call EndRound - it should preserve the message and class
         _engine.EndRound(updated, "Round finished");
 
-        // Message and color should still be preserved
+        // Message and class should still be preserved
         updated.LastMessage.Should().Contain("Correct answer");
-        updated.LastMessageColor.Should().Be("#ffd700");
+        updated.LastMessageClass.Should().Be("correct-answer");
     }
 
     [Fact]

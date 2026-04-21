@@ -1,5 +1,85 @@
 # Changelog
 
+## [Unreleased] - Unified Messaging System Refactor
+
+- 2026-04-21
+- **Refactor: Unified Messaging System (Context & Player-Specific)**
+  - Consolidated fragmented message handling into a single custom React hook
+  - All message logic now centralized with context awareness and player-specific rendering
+  - **Frontend changes:**
+    - Created `useMessageProcessor` custom hook that handles all message types:
+      - **Round Start Messages:** Both players see "Round X started." - persistent until spin
+      - **Incorrect Guess Messages:** Auto-clear after 3 seconds, personalized per player role
+        - Active player: "Incorrect guess. Try again!"
+        - Opponent: "{OpponentName} guessed incorrectly: {word}."
+      - **Correct Answer Messages:** Both players see "Correct answer, {PlayerName} is awarded {X} points." - yellow styling, persistent
+      - **Final Guess Warnings:** Only active player sees "⚠️ Final Guess! The wheel value is locked. Make your guess!"
+      - **Opponent's Final Guess:** Non-active player sees "{OpponentName} has a final guess with the locked wheel value."
+      - **Spin Instructions:** Only non-final rounds, active player only - "Spin the wheel to lock in your reward and reveal the first letter."
+    - Simplified JSX message rendering from 11 lines of conditional logic to 4 lines
+    - Message display now unified in single `<div className="messages">` component
+    - **Messaging on spin:**
+      - `onSpinStart`: Clears display message for both players
+      - `onSpinComplete`: Message displayed from server broadcast via useEffect
+    - **Removed:** Hard-coded conditional message renders scattered throughout component
+  - **Backend changes (MatchEngine.cs):**
+    - Updated `FinishMatch` method to preserve `LastMessage` (similar to `EndRound`)
+    - Now checks `string.IsNullOrEmpty(match.LastMessage)` before clearing
+    - Ensures correct answer message displays on final round: "Correct answer, {PlayerName} is awarded {X} points."
+  - **Benefits:**
+    - Single source of truth for all messaging logic
+    - Easier to add/modify message types without affecting JSX
+    - Player-specific messaging handled cleanly in hook
+    - Context-aware messages (round number, game state, player role)
+    - All messages now properly broadcast to both players via SignalR
+    - Eliminated message segmentation across component
+
+## [Unreleased] - CSS Color Variables Refactoring
+
+- 2026-04-21
+- **Refactor: Centralized Color Management with CSS Variables**
+  - Created dedicated `colors.css` file to manage all color definitions
+  - All hardcoded hexcodes replaced with semantic CSS variables
+  - **Frontend changes:**
+    - Created `frontend/src/colors.css` with organized color variables:
+      - Primary Colors: `--color-text-light`, `--color-bg-dark`, `--color-bg-card`, `--color-bg-input`, `--color-bg-ending-box`
+      - Accent Colors: `--color-accent-primary`, `--color-accent-secondary`, `--color-accent-danger`
+      - UI Colors: `--color-border-input`, `--color-border-disabled`, `--color-border-hr`, `--color-text-disabled`
+      - Status Colors: `--color-status-correct`, `--color-status-warning`
+      - Glow Effects: `--glow-primary`, `--glow-secondary`, `--glow-primary-enhanced`
+    - Updated `styles.css`:
+      - Added import for `colors.css`
+      - Replaced all hardcoded color values with variable references
+      - Consolidated inline rgba glow effects into reusable glow variables
+      - Updated 15+ color definitions across root, cards, buttons, inputs, lists, and message classes
+  - **Benefits:**
+    - Single source of truth for all colors - easier to maintain and update
+    - Enables easy theme switching in the future
+    - Improves code readability with semantic variable names
+    - Reduced CSS file duplication of color values
+
+## [Unreleased] - Correct Answer Message Styling with CSS Classes
+
+- 2026-04-21
+- **Feature: Yellow-Colored Correct Answer Messages (CSS-based)**
+  - When a player makes a correct guess, displays "Correct answer, {PlayerName} is awarded {X} points." in yellow (#ffd700)
+  - Message styling automatically resets when a new round starts
+  - **Backend changes:**
+    - Renamed `LastMessageColor` property to `LastMessageClass` in `MatchState` and `MatchStateDto` models
+    - `ApplyGuess` method sets `LastMessageClass = "correct-answer"` when guess is correct
+    - `EndRound` method preserves message and class if already set (prevents overwriting correct answer message)
+    - `StartNextRound` method resets `LastMessageClass = null` for new round messages
+  - **Frontend changes:**
+    - Updated `MatchPage.jsx` to use CSS class binding: `<em className={matchState.lastMessageClass}>{matchState.lastMessage}</em>`
+    - Added CSS classes in `styles.css`:
+      - `.correct-answer`: Yellow text (#ffd700) with glow effect for correct answers
+      - `.final-guess-warning`: Orange text (#ff6b35) with glow effect for final guess warnings
+    - Removed inline style objects in favor of semantic CSS classes
+  - **Unit tests:**
+    - Updated `ApplyGuess_ShouldSetCorrectAnswerClassForCorrectAnswer` test
+    - Updated `EndRound_ShouldPreserveCorrectAnswerMessageAndClass` test
+    - Updated `StartNextRound_ShouldResetMessageClassToDefault` test
+
 ## [Unreleased] - Word Randomization Per Match
 
 - 2026-04-20

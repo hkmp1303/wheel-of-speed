@@ -1,0 +1,28 @@
+:root {
+  /* Primary Colors */
+  --color-text-light: #f5f7fb;
+  --color-bg-dark: #0a0e1a;
+  --color-bg-card: #0f131f;
+  --color-bg-input: #0f131a;
+  --color-bg-ending-box: #101826;
+
+  /* Accent Colors */
+  --color-accent-primary: #4f9dff;
+  --color-accent-secondary: #f5c542;
+  --color-accent-danger: #ff4f4f;
+
+  /* UI Colors */
+  --color-border-input: #354155;
+  --color-border-disabled: #555;
+  --color-border-hr: #2b3342;
+  --color-text-disabled: #888;
+
+  /* Status Colors */
+  --color-status-correct: #ffd700;
+  --color-status-warning: #ff6b35;
+
+  /* Glow Effects */
+  --glow-primary: 0 0 20px rgba(79, 157, 255, 0.6);
+  --glow-secondary: 0 0 15px rgba(245, 197, 66, 0.6);
+  --glow-primary-enhanced: 0 0 40px rgba(79, 157, 255, 0.8);
+}

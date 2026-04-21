@@ -23,7 +23,7 @@ export default function PrizeWheel({ spinPending = false, reward = null }) {
                 </svg>
             </div>
 
-            {reward != null && <div className="reward-display">Reward: {reward}</div>}
+            <div className={`reward-display${!!reward ? "": " hidden"}`}>Reward: {reward}</div>
         </div>
     );
 }
