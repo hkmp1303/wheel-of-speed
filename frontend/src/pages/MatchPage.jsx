@@ -16,7 +16,7 @@ export default function MatchPage() {
   }
 
   return (
-    <main className="page wide">
+    <main id="game-board" className="page wide">
       <section className="card hero">
         <h1>Round {matchState.currentRound}/{matchState.maxRounds}</h1>
         <p>Current player: <strong>{matchState.activePlayerName ?? 'Waiting...'}</strong></p>
