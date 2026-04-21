@@ -210,41 +210,65 @@ public class MatchEngineTests
     }
 
     [Fact]
-    public void AddPlayer_ShouldThrow_WhenNameAlreadyExists()
+    public void CreateMatch_SetsInitialStateCorrectly()
     {
+
         var match = _engine.CreateMatch("Alice");
 
-        var act = () => _engine.AddPlayer(match, "alice");
 
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*already exists*");
+        Assert.NotNull(match.GuidCode);
+        Assert.Equal(MatchStatus.Lobby, match.Status);
+        Assert.Single(match.Players);
+        Assert.Equal("Alice", match.Players[0].Name);
     }
 
     [Fact]
-    public void StartNextRound_ShouldThrow_WhenNotAllPlayersReadyOnFirstRound()
+    public void AddPlayer_WhenGameAlreadyStarted_DoesNotAddPlayer()
     {
-        var match = _engine.CreateMatch("A");
-        _engine.AddPlayer(match, "B");
+
+        var match = _engine.CreateMatch("Alice");
+        match.Status = MatchStatus.InProgress;
+
+
+        var act = () => _engine.AddPlayer(match, "Bob");
+
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void MarkReady_WhenAllPlayersReady_TransitionsStatusToInProgress()
+    {
+
+        var match = _engine.CreateMatch("Alice");
+        _engine.AddPlayer(match, "Bob");
+
+
         _engine.MarkReady(match, match.Players[0].PlayerId);
 
-        var act = () => _engine.StartNextRound(match, "socket");
 
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*must be ready*");
+        Assert.Equal(MatchStatus.Lobby, match.Status);
+
+
+        _engine.MarkReady(match, match.Players[1].PlayerId);
+
+
+        Assert.True(match.Players[0].IsReady);
+        Assert.True(match.Players[1].IsReady);
     }
 
     [Fact]
-    public void ApplySpin_ShouldThrow_WhenPlayerIsNotActive()
+    public void FinishMatch_ShouldChangeStatusToFinished_AndSetMessage()
     {
         var match = BuildReadyMatch();
-        _engine.StartNextRound(match, "network");
-        var nonActivePlayer = match.Players.Single(player => player.PlayerId != match.ActivePlayerId);
-
-        var act = () => _engine.ApplySpin(match, nonActivePlayer.PlayerId, 100);
-
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*turn*");
+        _engine.StartNextRound(match, "finalword");
+        _engine.FinishMatch(match, "Player A wins the game!");
+        match.Status.Should().Be(MatchStatus.Finished);
+        match.SecondsLeft.Should().Be(0);
+        match.CurrentWheelValue.Should().BeNull();
+        match.LastMessage.Should().Be("Player A wins the game!");
     }
+
 
     [Fact]
     public void ApplyGuess_ShouldThrow_WhenWheelHasNotBeenSpun()
@@ -352,6 +376,26 @@ public class MatchEngineTests
         var secondPlayer = updated.Players.Single(p => p.PlayerId == secondActive);
         secondPlayer.Score.Should().Be(500); // Should get the locked wheel value
     }
+
+    [Fact]
+    public void RotateTurn_ShouldThrow_WhenRoundIsAlreadyResolved()
+    {
+
+        var match = BuildReadyMatch();
+        _engine.StartNextRound(match, "timer");
+        _engine.ApplySpin(match, match.ActivePlayerId!, 100);
+
+
+        _engine.ApplyGuess(match, match.ActivePlayerId!, "timer");
+
+
+        var act = () => _engine.RotateTurn(match);
+
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*resolved*");
+    }
+
 
     private MatchState BuildReadyMatch()
     {

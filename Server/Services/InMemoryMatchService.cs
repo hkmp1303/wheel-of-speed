@@ -2,12 +2,13 @@ using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using WheelOfSpeed.Hubs;
 using WheelOfSpeed.Models;
+using WheelOfSpeed.Services;
 
 namespace WheelOfSpeed.Services;
 
 public interface IMatchService
 {
-    Task<MatchStateDto> CreateMatchAsync(string hostName);
+    Task<MatchStateDto> CreateMatchAsync(string hostName, Difficulty difficulty = Difficulty.Normal);
     Task<MatchStateDto> JoinMatchAsync(string guidCode, string playerName);
     Task<MatchStateDto> MarkReadyAsync(string guidCode, string playerId);
     Task<MatchStateDto> GetMatchAsync(string guidCode);
@@ -30,9 +31,10 @@ public sealed class InMemoryMatchService : IMatchService
         _hubContext = hubContext;
     }
 
-    public async Task<MatchStateDto> CreateMatchAsync(string hostName)
+    public async Task<MatchStateDto> CreateMatchAsync(string hostName, Difficulty difficulty = Difficulty.Normal)
     {
         var match = _engine.CreateMatch(hostName);
+        match.Difficulty = difficulty;
         _matches[match.GuidCode] = match;
         return await BroadcastAsync(match);
     }
@@ -58,7 +60,7 @@ public sealed class InMemoryMatchService : IMatchService
             _engine.MarkReady(match, playerId);
             if (match.Status == MatchStatus.Lobby && match.Players.Count >= 2 && match.Players.All(p => p.IsReady))
             {
-                _engine.StartNextRound(match, _wordBank.GetRandomWord(match.UsedWords));
+                _engine.StartNextRound(match, _wordBank.GetRandomWord(match.UsedWords, match.Difficulty));
                 startLoop = true;
             }
         }
@@ -161,7 +163,6 @@ public sealed class InMemoryMatchService : IMatchService
                     continue;
                 }
 
-                // Skip game logic if the round was already resolved by a guess
                 if (match.RoundResolved)
                 {
                     continue;

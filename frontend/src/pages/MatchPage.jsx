@@ -148,7 +148,7 @@ export default function MatchPage() {
   }
 
   return (
-    <main className="page wide">
+    <main id="game-board" className="page wide">
       <section className="card hero">
         <h1>Round {matchState.currentRound}/{matchState.maxRounds}</h1>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -159,11 +159,19 @@ export default function MatchPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
           <PrizeWheel spinPending={spinPending} reward={matchState.currentWheelValue} />
-          <div style={{ flex: 1 }}>
-            <p className="word">{matchState.maskedWord || '_ _ _ _'}</p>
+          <div className="word-display">
+            {matchState.maskedWord
+            ? matchState.maskedWord.split(' ').map((char, i) => (
+                <span key={i} className="letter-box">
+                  {char === '_' ? '' : char}
+                </span>
+              ))
+            : Array.from({ length: 4 }).map((_, i) => (
+                <span key={i} className="letter-box"></span>
+            ))
+          }
           </div>
         </div>
-
         {error && <p className="error">{error}</p>}
 
         <div className="actions">

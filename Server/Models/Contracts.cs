@@ -1,5 +1,12 @@
 namespace WheelOfSpeed.Models;
 
+public enum Difficulty
+{
+    Easy,
+    Normal,
+    Hard
+}
+
 public enum MatchStatus
 {
     Lobby,
@@ -8,7 +15,7 @@ public enum MatchStatus
     Finished
 }
 
-public sealed record CreateMatchRequest(string HostName);
+public sealed record CreateMatchRequest(string HostName, Difficulty Difficulty = Difficulty.Normal);
 public sealed record JoinMatchRequest(string PlayerName);
 public sealed record ReadyRequest(string PlayerId);
 public sealed record SpinRequest(string PlayerId);
@@ -66,6 +73,7 @@ public sealed class MatchState
     public int ElapsedSecondsSinceSpin { get; set; } = 0;
     public int LetterRevealIntervalSeconds { get; set; } = 8;
     public List<string> UsedWords { get; set; } = [];
+    public Difficulty Difficulty { get; set; } = Difficulty.Normal;
 }
 
 public sealed class PlayerState
