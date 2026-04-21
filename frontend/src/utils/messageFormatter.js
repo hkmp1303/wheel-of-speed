@@ -42,7 +42,7 @@ export function formatCorrectAnswerMessage(playerName, points) {
  */
 export function formatFinalGuessMessage() {
   return {
-    text: "⚠️ Final Guess! The wheel value is locked. Make your guess!",
+    text: "⚠ Final Guess! The wheel value is locked. Make your guess!",
     class: "final-guess-warning"
   };
 }

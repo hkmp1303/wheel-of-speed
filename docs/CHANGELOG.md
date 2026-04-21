@@ -13,7 +13,7 @@
         - Active player: "Incorrect guess. Try again!"
         - Opponent: "{OpponentName} guessed incorrectly: {word}."
       - **Correct Answer Messages:** Both players see "Correct answer, {PlayerName} is awarded {X} points." - yellow styling, persistent
-      - **Final Guess Warnings:** Only active player sees "⚠️ Final Guess! The wheel value is locked. Make your guess!"
+      - **Final Guess Warnings:** Only active player sees "⚠ Final Guess! The wheel value is locked. Make your guess!"
       - **Opponent's Final Guess:** Non-active player sees "{OpponentName} has a final guess with the locked wheel value."
       - **Spin Instructions:** Only non-final rounds, active player only - "Spin the wheel to lock in your reward and reveal the first letter."
     - Simplified JSX message rendering from 11 lines of conditional logic to 4 lines
@@ -203,7 +203,7 @@
     - **Unified status messaging:** Moved all status messages to single div above actions
     - Context-aware messages based on game state:
       - Round ended: "Round ended. Spin to start the next round." (active player) or "Waiting for next player to spin."
-      - Final guess: "⚠️ Final Guess! The wheel value is locked. Make your guess!"
+      - Final guess: "⚠ Final Guess! The wheel value is locked. Make your guess!"
       - After spin: "Wheel Value: +X points"
       - Before spin: "Spin the wheel to lock in your reward and reveal the first letter."
     - Removed confusing multiple messages around spin button

@@ -53,7 +53,7 @@ function useMessageProcessor(matchState, playerId, activePlayerName) {
       messageClass = matchState.lastMessageClass
     } else if (isFinalGuess && myTurn) {
       // Final guess warning - context-specific message
-      message = "⚠️ Final Guess! The wheel value is locked. Make your guess!"
+      message = "⚠ Final Guess! The wheel value is locked. Make your guess!"
       messageClass = "final-guess-warning"
     } else if (isFinalGuess && !myTurn) {
       // Opponent's final guess - show active player what's happening
