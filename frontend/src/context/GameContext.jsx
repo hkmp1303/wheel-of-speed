@@ -3,6 +3,10 @@ import * as signalR from '@microsoft/signalr'
 
 const GameContext = createContext(null)
 
+function trimTrailingSlash(value) {
+  return value.replace(/\/+$/, '')
+}
+
 export function GameProvider({ children }) {
   const [playerName, setPlayerName] = useState('')
   const [playerId, setPlayerId] = useState('')
@@ -10,11 +14,14 @@ export function GameProvider({ children }) {
   const [matchState, setMatchState] = useState(null)
   const [connection, setConnection] = useState(null)
   const [error, setError] = useState('')
+  const apiBaseUrl = trimTrailingSlash(import.meta.env.VITE_API_BASE_URL ?? '')
+  const apiPath = (path) => `${apiBaseUrl}${path}`
+  const hubUrl = apiBaseUrl ? `${apiBaseUrl}/hubs/match` : '/hubs/match'
 
   const api = useMemo(() => ({
     async createMatch(name) {
       setError('')
-      const response = await fetch('/api/matches', {
+      const response = await fetch(apiPath('/api/matches'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hostName: name })
@@ -34,7 +41,7 @@ export function GameProvider({ children }) {
     },
     async joinMatch(code, name) {
       setError('')
-      const response = await fetch(`/api/matches/${code}/join`, {
+      const response = await fetch(apiPath(`/api/matches/${code}/join`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerName: name })
@@ -53,7 +60,7 @@ export function GameProvider({ children }) {
       return data
     },
     async markReady() {
-      const response = await fetch(`/api/matches/${matchCode}/ready`, {
+      const response = await fetch(apiPath(`/api/matches/${matchCode}/ready`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerId })
@@ -67,7 +74,7 @@ export function GameProvider({ children }) {
       setMatchState(data)
     },
     async spin() {
-      const response = await fetch(`/api/matches/${matchCode}/spin`, {
+      const response = await fetch(apiPath(`/api/matches/${matchCode}/spin`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerId })
@@ -81,7 +88,7 @@ export function GameProvider({ children }) {
       setMatchState(data)
     },
     async guess(guess) {
-      const response = await fetch(`/api/matches/${matchCode}/guess`, {
+      const response = await fetch(apiPath(`/api/matches/${matchCode}/guess`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerId, guess })
@@ -96,7 +103,7 @@ export function GameProvider({ children }) {
       return data
     },
     async fetchMatch(code) {
-      const response = await fetch(`/api/matches/${code}`)
+      const response = await fetch(apiPath(`/api/matches/${code}`))
       if (!response.ok) {
         const err = await response.json().catch(() => ({ error: 'Match not found.' }))
         setError(err.error || 'Match not found.')
@@ -106,13 +113,13 @@ export function GameProvider({ children }) {
       setMatchState(data)
       return data
     }
-  }), [matchCode, playerId])
+  }), [apiBaseUrl, matchCode, playerId])
 
   useEffect(() => {
     if (!matchCode) return
 
     const hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/match')
+      .withUrl(hubUrl)
       .withAutomaticReconnect()
       .build()
 
@@ -129,7 +136,7 @@ export function GameProvider({ children }) {
     return () => {
       hubConnection.stop()
     }
-  }, [matchCode])
+  }, [hubUrl, matchCode])
 
   return (
     <GameContext.Provider value={{
