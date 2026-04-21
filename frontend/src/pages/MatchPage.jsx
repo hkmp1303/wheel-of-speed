@@ -21,7 +21,20 @@ export default function MatchPage() {
         <h1>Round {matchState.currentRound}/{matchState.maxRounds}</h1>
         <p>Current player: <strong>{matchState.activePlayerName ?? 'Waiting...'}</strong></p>
         <p>Timer: <strong>{matchState.secondsLeft}</strong></p>
-        <p className="word">{matchState.maskedWord || '_ _ _ _'}</p>
+
+        <div className="word-display">
+          {matchState.maskedWord
+            ? matchState.maskedWord.split(' ').map((char, i) => (
+                <span key={i} className="letter-box">
+                  {char === '_' ? '' : char}
+                </span>
+              ))
+            : Array.from({ length: 4 }).map((_, i) => (
+                <span key={i} className="letter-box"></span>
+              ))
+          }
+        </div>
+
         <p>{matchState.lastMessage}</p>
 
         {error && <p className="error">{error}</p>}
@@ -30,7 +43,6 @@ export default function MatchPage() {
           {matchState.status === 'RoundEnded' && (
             <p><em>Round ended — next round starting soon...</em></p>
           )}
-
           <button onClick={spin} disabled={!myTurn || !isInProgress || hasSpun}>
             Spin
           </button>

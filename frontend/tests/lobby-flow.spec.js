@@ -53,6 +53,49 @@ test('home page buttons are disabled until required input exists', async ({ page
   await expect(page.getByRole('button', { name: 'Join Game' })).toBeEnabled()
 })
 
+test('difficulty buttons are visible on home page', async ({ page }) => {
+  await page.goto('/')
+
+  await expect(page.getByRole('button', { name: 'Easy' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Normal' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Hard' })).toBeVisible()
+})
+
+test('word is displayed as letter boxes when match starts', async ({ browser }) => {
+  const hostContext = await browser.newContext()
+  const guestContext = await browser.newContext()
+
+  const hostPage = await hostContext.newPage()
+  const guestPage = await guestContext.newPage()
+
+  await hostPage.goto('/')
+  await hostPage.getByPlaceholder('Ange namn').fill('Alice')
+  await hostPage.getByRole('button', { name: 'Create Game' }).click()
+  await expect(hostPage.getByRole('heading', { name: 'Lobby' })).toBeVisible()
+
+  const codeText = await hostPage.locator('p strong').first().textContent()
+  const joinCode = (codeText ?? '').trim()
+
+  await guestPage.goto('/')
+  await guestPage.getByPlaceholder('Ange namn').fill('Bob')
+  await guestPage.getByPlaceholder('GUID code').fill(joinCode)
+  await guestPage.getByRole('button', { name: 'Join Game' }).click()
+  await expect(guestPage.getByRole('heading', { name: 'Lobby' })).toBeVisible()
+
+  await hostPage.getByRole('button', { name: 'Ready' }).click()
+  await guestPage.getByRole('button', { name: 'Ready' }).click()
+  await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
+
+  // Word should be displayed as letter boxes
+  const firstBox = hostPage.locator('.letter-box').first()
+  await expect(firstBox).toBeVisible()
+  const count = await hostPage.locator('.letter-box').count()
+  expect(count).toBeGreaterThan(0)
+
+  await hostContext.close()
+  await guestContext.close()
+})
+
 test('active player can spin wheel and guess word', async ({ browser }) => {
   const hostContext = await browser.newContext()
   const guestContext = await browser.newContext()
@@ -83,7 +126,6 @@ test('active player can spin wheel and guess word', async ({ browser }) => {
   // Determine who has first turn (one spin button should be enabled)
   const hostSpinEnabled = await hostPage.getByRole('button', { name: 'Spin' }).isEnabled()
   const activePage = hostSpinEnabled ? hostPage : guestPage
-  const passivePage = hostSpinEnabled ? guestPage : hostPage
 
   // Active player spins
   await activePage.getByRole('button', { name: 'Spin' }).click()
@@ -143,13 +185,6 @@ test('scoreboard updates with player scores after guess', async ({ browser }) =>
   // Determine active player
   const hostSpinEnabled = await hostPage.getByRole('button', { name: 'Spin' }).isEnabled()
   const activePage = hostSpinEnabled ? hostPage : guestPage
-  const passivePage = hostSpinEnabled ? guestPage : hostPage
-
-  // Get initial scoreboard state
-  const initialScores = {
-    host: await hostPage.getByText('Alice').locator('..').getByText(/^\d+ pts$/).textContent(),
-    guest: await guestPage.getByText('Bob').locator('..').getByText(/^\d+ pts$/).textContent()
-  }
 
   // Active player spins and guesses
   await activePage.getByRole('button', { name: 'Spin' }).click()
