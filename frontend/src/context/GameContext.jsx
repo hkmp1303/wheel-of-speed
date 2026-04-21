@@ -18,6 +18,102 @@ export function GameProvider({ children }) {
   const apiPath = (path) => `${apiBaseUrl}${path}`;
   const hubUrl = apiBaseUrl ? `${apiBaseUrl}/hubs/match` : "/hubs/match";
 
+  const api = useMemo(() => ({
+    async createMatch(name, difficulty = 'Normal') {
+      setError('')
+      const response = await fetch('/api/matches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hostName: name, difficulty })
+      })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Failed to create match.' }))
+        setError(err.error || 'Failed to create match.')
+        return null
+      }
+      const data = await response.json()
+      const createdPlayer = data.players[0]
+      setPlayerName(name)
+      setPlayerId(createdPlayer.playerId)
+      setMatchCode(data.guidCode)
+      setMatchState(data)
+      return data
+    },
+    async joinMatch(code, name) {
+      setError('')
+      const response = await fetch(`/api/matches/${code}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerName: name })
+      })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Failed to join match.' }))
+        setError(err.error || 'Failed to join match.')
+        return null
+      }
+      const data = await response.json()
+      const joinedPlayer = data.players.find((player) => player.name.toLowerCase() === name.toLowerCase())
+      setPlayerName(name)
+      setPlayerId(joinedPlayer?.playerId ?? '')
+      setMatchCode(data.guidCode)
+      setMatchState(data)
+      return data
+    },
+    async markReady() {
+      const response = await fetch(`/api/matches/${matchCode}/ready`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId })
+      })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Failed to mark ready.' }))
+        setError(err.error || 'Failed to mark ready.')
+        return
+      }
+      const data = await response.json()
+      setMatchState(data)
+    },
+    async spin() {
+      const response = await fetch(`/api/matches/${matchCode}/spin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId })
+      })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Failed to spin.' }))
+        setError(err.error || 'Failed to spin.')
+        return
+      }
+      const data = await response.json()
+      setMatchState(data)
+    },
+    async guess(guess) {
+      const response = await fetch(`/api/matches/${matchCode}/guess`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId, guess })
+      })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Failed to submit guess.' }))
+        setError(err.error || 'Failed to submit guess.')
+        return null
+      }
+      const data = await response.json()
+      setMatchState(data)
+      return data
+    },
+    async fetchMatch(code) {
+      const response = await fetch(`/api/matches/${code}`)
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Match not found.' }))
+        setError(err.error || 'Match not found.')
+        return null
+      }
+      const data = await response.json()
+      setMatchState(data)
+      return data
+    }
+  }), [matchCode, playerId])
   const api = useMemo(
     () => ({
       async createMatch(name) {

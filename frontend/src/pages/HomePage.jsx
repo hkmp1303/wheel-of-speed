@@ -8,6 +8,7 @@ export default function HomePage() {
   const isJoinFlow = Boolean(initialJoinCode);
   const [name, setName] = useState("");
   const [joinCode, setJoinCode] = useState(initialJoinCode);
+  const [difficulty, setDifficulty] = useState("Normal");
 
   return (
     <main className="page">
@@ -23,17 +24,27 @@ export default function HomePage() {
           placeholder="Ange namn"
         />
 
-        {!isJoinFlow && (
-          <div className="actions">
+        <label>Svårighetsgrad</label>
+        <div className="actions">
+          {["Easy", "Normal", "Hard"].map((d) => (
             <button
-              id="create-game-btn"
-              onClick={() => createMatch(name)}
-              disabled={!name.trim()}
+              key={d}
+              onClick={() => setDifficulty(d)}
+              style={{
+                background: difficulty === d ? "#5b8cff" : "#171c26",
+                border: "1px solid #2b3342"
+              }}
             >
-              Create Game
+              {d}
             </button>
-          </div>
-        )}
+          ))}
+        </div>
+
+        <div className="actions">
+          <button onClick={() => createMatch(name, difficulty)} disabled={!name.trim()}>
+            Create Game
+          </button>
+        </div>
 
         {!isJoinFlow && <hr />}
 
