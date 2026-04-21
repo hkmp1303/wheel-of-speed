@@ -11,7 +11,7 @@ public static class MatchEndpoints
 
         group.MapPost("", async (CreateMatchRequest request, IMatchService service) =>
         {
-            var match = await service.CreateMatchAsync(request.HostName);
+            var match = await service.CreateMatchAsync(request.HostName, request.Difficulty);
             return Results.Ok(match);
         });
 

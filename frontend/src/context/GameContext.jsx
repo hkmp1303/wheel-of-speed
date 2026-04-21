@@ -12,12 +12,12 @@ export function GameProvider({ children }) {
   const [error, setError] = useState('')
 
   const api = useMemo(() => ({
-    async createMatch(name) {
+    async createMatch(name, difficulty = 'Normal') {
       setError('')
       const response = await fetch('/api/matches', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hostName: name })
+        body: JSON.stringify({ hostName: name, difficulty })
       })
       if (!response.ok) {
         const err = await response.json().catch(() => ({ error: 'Failed to create match.' }))

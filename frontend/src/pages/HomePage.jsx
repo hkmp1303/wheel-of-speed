@@ -5,6 +5,7 @@ export default function HomePage() {
   const { createMatch, joinMatch } = useGame();
   const [name, setName] = useState("");
   const [joinCode, setJoinCode] = useState("");
+  const [difficulty, setDifficulty] = useState("Normal");
 
   return (
     <main className="page">
@@ -19,8 +20,24 @@ export default function HomePage() {
           placeholder="Ange namn"
         />
 
+        <label>Svårighetsgrad</label>
         <div className="actions">
-          <button onClick={() => createMatch(name)} disabled={!name.trim()}>
+          {["Easy", "Normal", "Hard"].map((d) => (
+            <button
+              key={d}
+              onClick={() => setDifficulty(d)}
+              style={{
+                background: difficulty === d ? "#5b8cff" : "#171c26",
+                border: "1px solid #2b3342"
+              }}
+            >
+              {d}
+            </button>
+          ))}
+        </div>
+
+        <div className="actions">
+          <button onClick={() => createMatch(name, difficulty)} disabled={!name.trim()}>
             Create Game
           </button>
         </div>
