@@ -1,20 +1,83 @@
 using Xunit;
+using FluentAssertions;
 using WheelOfSpeed.Services;
+using WheelOfSpeed.Models;
 
 namespace WheelOfSpeed.UnitTests
 {
+    /// <summary>
+    /// Tests for wheel spin functionality and reward generation.
+    ///
+    /// IMPORTANT: Frontend and Backend must use the same wheel values!
+    /// Frontend VALUES array (PrizeWheel.jsx): [100, 200, 300, 400, 500]
+    /// Backend must match this exactly.
+    /// </summary>
     public class MatchEngineSpinTests
     {
+        // Frontend wheel values - MUST match PrizeWheel.jsx VALUES array
+        private static readonly int[] FRONTEND_WHEEL_VALUES = { 100, 200, 300, 400, 500 };
+
         [Fact]
-        public void GenerateSpinReward_ReturnsValueFromWheel()
+        public void GenerateSpinReward_ReturnsValueFromFrontendWheelArray()
         {
             var engine = new MatchEngine();
-            var allowed = new[] { 50, 100, 200, 300, 500, 1000 };
 
             // deterministic seed to exercise method
             var reward = engine.GenerateSpinReward(seed: 12345);
 
-            Assert.Contains(reward, allowed);
+            // Must match frontend values exactly
+            reward.Should().BeOneOf(FRONTEND_WHEEL_VALUES);
+        }
+
+        [Fact]
+        public void GenerateSpinReward_ReturnsVariedValues()
+        {
+            var engine = new MatchEngine();
+            var results = new System.Collections.Generic.HashSet<int>();
+
+            // Generate 50 random values
+            for (int i = 0; i < 50; i++)
+            {
+                var reward = engine.GenerateSpinReward();
+                results.Add(reward);
+            }
+
+            // Should get variety, not stuck on one value
+            results.Should().HaveCountGreaterThan(1);
+            // All results should be valid frontend values
+            results.Should().AllSatisfy(v => v.Should().BeOneOf(FRONTEND_WHEEL_VALUES));
+        }
+
+        [Fact]
+        public void GenerateSpinReward_NeverReturnsInvalidValues()
+        {
+            var engine = new MatchEngine();
+            var invalidValues = new[] { 50, 150, 250, 600, 1000 };
+
+            // Generate many spins
+            for (int i = 0; i < 100; i++)
+            {
+                var reward = engine.GenerateSpinReward();
+                invalidValues.Should().NotContain(reward);
+                reward.Should().BeOneOf(FRONTEND_WHEEL_VALUES);
+            }
+        }
+
+        [Fact]
+        public void ApplySpin_SetsCurrentWheelValueToValidValue()
+        {
+            var engine = new MatchEngine();
+            var match = engine.CreateMatch("Test");
+            engine.AddPlayer(match, "Player2");
+            engine.MarkReady(match, match.Players[0].PlayerId);
+            engine.MarkReady(match, match.Players[1].PlayerId);
+            engine.StartNextRound(match, "example");
+
+            var wheelValue = 300;
+            engine.ApplySpin(match, match.ActivePlayerId!, wheelValue);
+
+            match.CurrentWheelValue.Should().Be(wheelValue);
+            match.CurrentWheelValue.Should().BeOneOf(FRONTEND_WHEEL_VALUES);
         }
     }
 }
