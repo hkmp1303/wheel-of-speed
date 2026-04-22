@@ -94,10 +94,11 @@ function useMessageProcessor(matchState, playerId, activePlayerName) {
 }
 
 export default function MatchPage() {
-  const { matchState, playerId, connection, matchCode, guess, error } = useGame()
+  const { matchState, playerId, connection, matchCode, guess, error, rematchState, requestRematch, acceptRematch, declineRematch, fetchMatch } = useGame()
   const [guessText, setGuessText] = useState('')
   const [spinPending, setSpinPending] = useState(false)
   const [guessDisabled, setGuessDisabled] = useState(false)
+  const [rematchPending, setRematchPending] = useState(false)
 
   const myTurn = matchState.activePlayerId === playerId
   const activePlayerName = matchState.activePlayerName ?? 'Opponent'
@@ -145,6 +146,28 @@ export default function MatchPage() {
     event.preventDefault()
     await guess(guessText)
     setGuessText('')
+  }
+
+  async function handleRequestRematch() {
+    setRematchPending(true)
+    const result = await requestRematch()
+    if (result) {
+      // Stay on this page; wait for opponent response
+    } else {
+      setRematchPending(false)
+    }
+  }
+
+  async function handleAcceptRematch() {
+    const result = await acceptRematch()
+    if (result && result.rematchGuidCode) {
+      await fetchMatch(result.rematchGuidCode)
+    }
+  }
+
+  async function handleDeclineRematch() {
+    await declineRematch()
+    setRematchPending(false)
   }
 
   return (
@@ -201,6 +224,31 @@ export default function MatchPage() {
           <div className="ending-box">
             <h2>Match complete</h2>
             <p>{matchState.gameOverMessage}</p>
+
+            {rematchState && rematchState.status === 'challenged' && rematchState.responderPlayerId === playerId && (
+              <div style={{ marginTop: '1rem', padding: '1rem', borderRadius: '4px' }}>
+                <h3>Rematch Challenge Received</h3>
+                <p>Your opponent has challenged you to a rematch!</p>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'center'}}>
+                  <button onClick={handleAcceptRematch} className="accept-button">Accept</button>
+                  <button onClick={handleDeclineRematch} className="decline-button">Decline</button>
+                </div>
+              </div>
+            )}
+
+            {rematchState && rematchState.status === 'challenged' && rematchState.challengerPlayerId === playerId && (
+              <p style={{ marginTop: '1rem', fontStyle: 'italic', color: '#666' }}>Waiting for opponent to accept...</p>
+            )}
+
+            {!rematchState && (
+              <button onClick={handleRequestRematch} disabled={rematchPending} className="rematch-button" style={{ marginTop: '1rem' }}>
+                {rematchPending ? "Requesting Rematch..." : "Request Rematch"}
+              </button>
+            )}
+
+            {rematchState && rematchState.status === 'declined' && (
+              <p style={{ marginTop: '1rem', color: '#e74c3c' }}>Rematch was declined</p>
+            )}
           </div>
         )}
       </section>
