@@ -225,29 +225,48 @@ export function GameProvider({ children }) {
   useEffect(() => {
     if (!matchCode) return;
 
-    // Discover a reachable backend URL by probing common development ports.
-    // This helps when the backend runs on 5000 or 5001, or when another process
-    // occupies 5000. If none respond, fall back to the relative "/hubs/match"
-    // path (useful when using a dev proxy).
+    // Resolve backend hub URL.
+    // In deployed environments, VITE_API_BASE_URL must be used.
+    // Local development can probe common local ports when env var is not set.
     async function resolveHubUrl() {
-      const proto = window.location.protocol;
       const host = window.location.hostname;
-      // revert to using a fixed configurable port. Use window.__BACKEND_PORT__ if provided,
-      // otherwise default to 5000. If the health check does not succeed, throw an error
-      // (hard fail) so callers can handle the unreachable backend explicitly.
-      const port = (typeof window.__BACKEND_PORT__ !== "undefined" && window.__BACKEND_PORT__) ? String(window.__BACKEND_PORT__) : "5000";
 
-      const health = `${proto}//${host}:${port}/api/health`;
-      try {
-        const res = await fetch(health, { method: "GET" });
-        if (res.ok) {
-          return `${proto}//${host}:${port}/hubs/match`;
+      if (apiBaseUrl) {
+        const health = `${apiBaseUrl}/api/health`;
+        try {
+          const res = await fetch(health, { method: "GET" });
+          if (res.ok) {
+            return `${apiBaseUrl}/hubs/match`;
+          }
+          throw new Error(`Backend health check returned ${res.status} at ${health}`);
+        } catch (err) {
+          throw new Error(`Backend not reachable at ${health}: ${err?.message ?? err}`);
         }
-        throw new Error(`Backend health check returned ${res.status} at ${health}`);
-      } catch (err) {
-        // Hard fail: bubble error to the caller so we don't silently fall back.
-        throw new Error(`Backend not reachable at ${health}: ${err?.message ?? err}`);
       }
+
+      const isLocalHost = host === "localhost" || host === "127.0.0.1";
+      if (!isLocalHost) {
+        throw new Error(
+          "Missing VITE_API_BASE_URL in non-local environment. " +
+            "Set it to your backend URL in Render static site settings.",
+        );
+      }
+
+      const proto = window.location.protocol;
+      const candidatePorts = ["5000", "5001"];
+      for (const port of candidatePorts) {
+        const health = `${proto}//${host}:${port}/api/health`;
+        try {
+          const res = await fetch(health, { method: "GET" });
+          if (res.ok) {
+            return `${proto}//${host}:${port}/hubs/match`;
+          }
+        } catch {
+          // Continue probing local ports.
+        }
+      }
+
+      throw new Error("Backend not reachable on localhost ports 5000/5001.");
     }
 
     const hubConnectionPromise = resolveHubUrl().then((hubUrl) => {
