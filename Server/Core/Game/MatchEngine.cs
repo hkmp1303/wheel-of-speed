@@ -4,7 +4,7 @@ namespace WheelOfSpeed.Services;
 
 public interface IMatchEngine
 {
-    MatchState CreateMatch(string hostName);
+    MatchState CreateMatch(string hostName, Difficulty difficulty);
     MatchState AddPlayer(MatchState match, string playerName, string? playerId = null);
     MatchState MarkReady(MatchState match, string playerId);
     MatchState StartNextRound(MatchState match, string word);
@@ -22,11 +22,14 @@ public interface IMatchEngine
 
 public sealed class MatchEngine : IMatchEngine
 {
-    public MatchState CreateMatch(string hostName)
+    public MatchState CreateMatch(string hostName, Difficulty difficulty)
     {
         ValidateNotEmpty(hostName, nameof(hostName));
 
-        var match = new MatchState();
+        var match = new MatchState
+        {
+            Difficulty = difficulty
+        };
         match.Players.Add(new PlayerState { Name = hostName.Trim() });
         match.LastMessage = "Lobby created. Share the code with another player.";
         return match;
@@ -391,6 +394,7 @@ public sealed class MatchEngine : IMatchEngine
         {
             MatchId = match.MatchId,
             GuidCode = match.GuidCode,
+            Difficulty = match.Difficulty,
             Status = match.Status,
             CurrentRound = match.CurrentRound,
             MaxRounds = match.MaxRounds,

@@ -36,8 +36,7 @@ public sealed class InMemoryMatchService : IMatchService
 
     public async Task<MatchStateDto> CreateMatchAsync(string hostName, Difficulty difficulty = Difficulty.Normal)
     {
-        var match = _engine.CreateMatch(hostName);
-        match.Difficulty = difficulty;
+        var match = _engine.CreateMatch(hostName, difficulty);
         _matches[match.GuidCode] = match;
         return await BroadcastAsync(match);
     }
@@ -91,7 +90,7 @@ public sealed class InMemoryMatchService : IMatchService
             // If the round has ended, start the next round before allowing spin
             if (match.Status == MatchStatus.RoundEnded)
             {
-                _engine.StartNextRound(match, _wordBank.GetRandomWord(match.UsedWords));
+                _engine.StartNextRound(match, _wordBank.GetRandomWord(match.UsedWords, match.Difficulty));
             }
 
             _engine.ApplySpin(match, playerId, _wordBank.GetRandomWheelValue());

@@ -35,6 +35,7 @@ public sealed class MatchStateDto
 {
     public string MatchId { get; init; } = string.Empty;
     public string GuidCode { get; init; } = string.Empty;
+    public Difficulty Difficulty { get; init; }
     public MatchStatus Status { get; init; }
     public int CurrentRound { get; init; }
     public int MaxRounds { get; init; }

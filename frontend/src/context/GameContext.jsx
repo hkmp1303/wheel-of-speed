@@ -24,7 +24,7 @@ export function GameProvider({ children }) {
     () => ({
       async createMatch(name, difficulty = "Normal") {
         setError("");
-        const response = await fetch("/api/matches", {
+        const response = await fetch(apiPath("/api/matches"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ hostName: name, difficulty }),
@@ -46,7 +46,7 @@ export function GameProvider({ children }) {
       },
       async joinMatch(code, name) {
         setError("");
-        const response = await fetch(`/api/matches/${code}/join`, {
+        const response = await fetch(apiPath(`/api/matches/${code}/join`), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ playerName: name }),
@@ -219,7 +219,7 @@ export function GameProvider({ children }) {
         window.history.replaceState({}, "", "/");
       },
     }),
-    [matchCode, playerId, connection],
+    [matchCode, playerId, connection, apiBaseUrl],
   );
 
   useEffect(() => {
