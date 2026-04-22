@@ -12,7 +12,7 @@ public class MatchEngineRematchTests
     // Builds a fully finished two-player match for use in rematch tests.
     private MatchState BuildFinishedMatch()
     {
-        var match = _engine.CreateMatch("Alice");
+        var match = _engine.CreateMatch("Alice", Difficulty.Normal);
         _engine.AddPlayer(match, "Bob");
         _engine.MarkReady(match, match.Players[0].PlayerId);
         _engine.MarkReady(match, match.Players[1].PlayerId);
@@ -28,7 +28,7 @@ public class MatchEngineRematchTests
     [Fact]
     public void CreateRematch_ShouldThrow_WhenMatchIsNotFinished()
     {
-        var match = _engine.CreateMatch("Alice");
+        var match = _engine.CreateMatch("Alice", Difficulty.Normal);
         _engine.AddPlayer(match, "Bob");
         // Status is Lobby, not Finished.
 

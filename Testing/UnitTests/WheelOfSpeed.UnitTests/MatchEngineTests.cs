@@ -12,7 +12,7 @@ public class MatchEngineTests
     [Fact]
     public void CreateMatch_ShouldCreateLobbyWithOnePlayer()
     {
-        var match = _engine.CreateMatch("Christian");
+        var match = _engine.CreateMatch("Christian", Difficulty.Normal);
 
         match.Status.Should().Be(MatchStatus.Lobby);
         match.Players.Should().HaveCount(1);
@@ -22,7 +22,7 @@ public class MatchEngineTests
     [Fact]
     public void StartNextRound_ShouldPickFirstPlayerAsActiveInRoundOne()
     {
-        var match = _engine.CreateMatch("A");
+        var match = _engine.CreateMatch("A", Difficulty.Normal);
         _engine.AddPlayer(match, "B");
         _engine.MarkReady(match, match.Players[0].PlayerId);
         _engine.MarkReady(match, match.Players[1].PlayerId);
@@ -213,19 +213,20 @@ public class MatchEngineTests
     public void CreateMatch_SetsInitialStateCorrectly()
     {
 
-        var match = _engine.CreateMatch("Alice");
+        var match = _engine.CreateMatch("Alice", Difficulty.Hard);
 
         Assert.NotNull(match.GuidCode);
         Assert.Equal(MatchStatus.Lobby, match.Status);
         Assert.Single(match.Players);
         Assert.Equal("Alice", match.Players[0].Name);
+        Assert.Equal(Difficulty.Hard, match.Difficulty);
     }
 
     [Fact]
     public void AddPlayer_WhenGameAlreadyStarted_DoesNotAddPlayer()
     {
 
-        var match = _engine.CreateMatch("Alice");
+        var match = _engine.CreateMatch("Alice", Difficulty.Normal);
         match.Status = MatchStatus.InProgress;
 
         var act = () => _engine.AddPlayer(match, "Bob");
@@ -237,7 +238,7 @@ public class MatchEngineTests
     public void MarkReady_WhenAllPlayersReady_TransitionsStatusToInProgress()
     {
 
-        var match = _engine.CreateMatch("Alice");
+        var match = _engine.CreateMatch("Alice", Difficulty.Normal);
         _engine.AddPlayer(match, "Bob");
 
         _engine.MarkReady(match, match.Players[0].PlayerId);
@@ -375,7 +376,7 @@ public class MatchEngineTests
 
     private MatchState BuildReadyMatch()
     {
-        var match = _engine.CreateMatch("A");
+        var match = _engine.CreateMatch("A", Difficulty.Normal);
         _engine.AddPlayer(match, "B");
         _engine.MarkReady(match, match.Players[0].PlayerId);
         _engine.MarkReady(match, match.Players[1].PlayerId);
