@@ -8,7 +8,7 @@ namespace WheelOfSpeed.Services;
 
 public interface IMatchService
 {
-    Task<MatchStateDto> CreateMatchAsync(string hostName, Difficulty difficulty = Difficulty.Normal);
+    Task<MatchStateDto> CreateMatchAsync(string hostName, Difficulty difficulty = Difficulty.Normal, int maxRounds = 4);
     Task<MatchStateDto> JoinMatchAsync(string guidCode, string playerName);
     Task<MatchStateDto> MarkReadyAsync(string guidCode, string playerId);
     Task<MatchStateDto> GetMatchAsync(string guidCode);
@@ -34,10 +34,13 @@ public sealed class InMemoryMatchService : IMatchService
         _hubContext = hubContext;
     }
 
-    public async Task<MatchStateDto> CreateMatchAsync(string hostName, Difficulty difficulty = Difficulty.Normal)
+    public async Task<MatchStateDto> CreateMatchAsync(string hostName, Difficulty difficulty = Difficulty.Normal, int maxRounds = 4)
     {
+        ValidateMaxRounds(maxRounds);
+
         var match = _engine.CreateMatch(hostName);
         match.Difficulty = difficulty;
+        match.MaxRounds = maxRounds;
         _matches[match.GuidCode] = match;
         return await BroadcastAsync(match);
     }
@@ -408,6 +411,14 @@ public sealed class InMemoryMatchService : IMatchService
         return _matches.TryGetValue(guidCode.ToUpperInvariant(), out var match)
             ? match
             : throw new KeyNotFoundException("Match not found.");
+    }
+
+    private static void ValidateMaxRounds(int maxRounds)
+    {
+        if (maxRounds < 4 || maxRounds > 16 || maxRounds % 2 != 0)
+        {
+            throw new InvalidOperationException("Max rounds must be an even number between 4 and 16.");
+        }
     }
 
     private MatchState GetMatchStateById(string matchId)
