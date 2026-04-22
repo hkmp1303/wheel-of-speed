@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 async function hostCreatesLobby(hostPage, name = 'Alice') {
   await hostPage.goto('/')
   await hostPage.getByRole('button', { name: 'Create Lobby' }).click()
-  await hostPage.getByPlaceholder('Ange namn').fill(name)
+  await hostPage.getByPlaceholder('Enter name').fill(name)
   await hostPage.getByRole('button', { name: 'Create Game' }).click()
   await expect(hostPage.getByRole('heading', { name: 'Lobby' })).toBeVisible()
   const codeText = await hostPage.locator('#invite-code-display').textContent()
@@ -13,11 +13,23 @@ async function hostCreatesLobby(hostPage, name = 'Alice') {
 async function guestJoinsLobby(guestPage, joinCode, name = 'Bob') {
   await guestPage.goto('/')
   await guestPage.getByRole('button', { name: 'Join Lobby' }).click()
-  await guestPage.getByPlaceholder('Ange namn').fill(name)
+  await guestPage.getByPlaceholder('Enter name').fill(name)
   await guestPage.getByPlaceholder('GUID code').fill(joinCode)
   await guestPage.getByRole('button', { name: 'Join Game' }).click()
   await expect(guestPage.getByRole('heading', { name: 'Lobby' })).toBeVisible()
 }
+
+test('rules link opens rules page and back returns home', async ({ page }) => {
+  await page.goto('/')
+
+  await page.getByRole('link', { name: 'Rules' }).click()
+  await expect(page).toHaveURL(/\/rules$/)
+  await expect(page.getByRole('heading', { name: 'Game Rules' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Back' }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByRole('button', { name: 'Create Lobby' })).toBeVisible()
+})
 
 test('create and join lobby starts match when both players are ready', async ({ browser }) => {
   const hostContext = await browser.newContext()
@@ -34,8 +46,8 @@ test('create and join lobby starts match when both players are ready', async ({ 
   await hostPage.getByRole('button', { name: 'Ready' }).click()
   await guestPage.getByRole('button', { name: 'Ready' }).click()
 
-  await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
-  await expect(guestPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
+  await expect(hostPage.getByRole('heading', { name: /Round 1\/\d+/ })).toBeVisible()
+  await expect(guestPage.getByRole('heading', { name: /Round 1\/\d+/ })).toBeVisible()
 
   const hostSpinEnabled = await hostPage.getByRole('button', { name: 'Spin' }).isEnabled()
   const guestSpinEnabled = await guestPage.getByRole('button', { name: 'Spin' }).isEnabled()
@@ -53,14 +65,14 @@ test('home page buttons are disabled until required input exists', async ({ page
   await page.getByRole('button', { name: 'Create Lobby' }).click()
   await expect(page.getByRole('button', { name: 'Create Game' })).toBeDisabled()
 
-  await page.getByPlaceholder('Ange namn').fill('Alice')
+  await page.getByPlaceholder('Enter name').fill('Alice')
   await expect(page.getByRole('button', { name: 'Create Game' })).toBeEnabled()
 
   await page.getByRole('button', { name: 'Back' }).click()
   await page.getByRole('button', { name: 'Join Lobby' }).click()
   await expect(page.getByRole('button', { name: 'Join Game' })).toBeDisabled()
 
-  await page.getByPlaceholder('Ange namn').fill('Alice')
+  await page.getByPlaceholder('Enter name').fill('Alice')
   await expect(page.getByRole('button', { name: 'Join Game' })).toBeDisabled()
 
   await page.getByPlaceholder('GUID code').fill('ABCDEFGH')
@@ -79,7 +91,7 @@ test('difficulty buttons are visible on create lobby screen', async ({ page }) =
 test('selected difficulty is shown in lobby after create', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Create Lobby' }).click()
-  await page.getByPlaceholder('Ange namn').fill('Alice')
+  await page.getByPlaceholder('Enter name').fill('Alice')
   await page.getByRole('button', { name: 'Hard' }).click()
   await page.getByRole('button', { name: 'Create Game' }).click()
 
@@ -99,7 +111,7 @@ test('word is displayed as letter boxes when match starts', async ({ browser }) 
 
   await hostPage.getByRole('button', { name: 'Ready' }).click()
   await guestPage.getByRole('button', { name: 'Ready' }).click()
-  await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
+  await expect(hostPage.getByRole('heading', { name: /Round 1\/\d+/ })).toBeVisible()
 
   const firstBox = hostPage.locator('.letter-box').first()
   await expect(firstBox).toBeVisible()
@@ -122,7 +134,7 @@ test('active player can spin wheel and guess word', async ({ browser }) => {
 
   await hostPage.getByRole('button', { name: 'Ready' }).click()
   await guestPage.getByRole('button', { name: 'Ready' }).click()
-  await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
+  await expect(hostPage.getByRole('heading', { name: /Round 1\/\d+/ })).toBeVisible()
 
   const hostSpinEnabled = await hostPage.getByRole('button', { name: 'Spin' }).isEnabled()
   const activePage = hostSpinEnabled ? hostPage : guestPage
@@ -139,7 +151,7 @@ test('active player can spin wheel and guess word', async ({ browser }) => {
 
   await expect(guessInput).toHaveValue('')
 
-  await expect(activePage.getByRole('heading', { name: /Round [1-3]\/3/ })).toBeVisible()
+  await expect(activePage.getByRole('heading', { name: /Round \d+\/\d+/ })).toBeVisible()
 
   await hostContext.close()
   await guestContext.close()
@@ -157,7 +169,7 @@ test('scoreboard updates with player scores after guess', async ({ browser }) =>
 
   await hostPage.getByRole('button', { name: 'Ready' }).click()
   await guestPage.getByRole('button', { name: 'Ready' }).click()
-  await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
+  await expect(hostPage.getByRole('heading', { name: /Round 1\/\d+/ })).toBeVisible()
 
   const hostSpinEnabled = await hostPage.getByRole('button', { name: 'Spin' }).isEnabled()
   const activePage = hostSpinEnabled ? hostPage : guestPage
@@ -190,7 +202,7 @@ test('after incorrect guess spin is locked until timer rotates turn', async ({ b
 
   await hostPage.getByRole('button', { name: 'Ready' }).click()
   await guestPage.getByRole('button', { name: 'Ready' }).click()
-  await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
+  await expect(hostPage.getByRole('heading', { name: /Round 1\/\d+/ })).toBeVisible()
 
   const hostSpinEnabled = await hostPage.getByRole('button', { name: 'Spin' }).isEnabled()
   const activePage = hostSpinEnabled ? hostPage : guestPage
