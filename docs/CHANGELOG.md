@@ -1,5 +1,115 @@
 # Changelog
 
+## [Unreleased] - Prize Wheel Animation Enhancements & Visual Indicators
+
+- 2026-04-22
+- **Feature: Dynamic Animation Duration for Consistent Rotation Speed**
+  - Wheel now rotates at constant speed (540°/second) regardless of distance
+  - Animation duration calculated dynamically: `duration = rotationDistance / speed`
+  - Ensures smooth, predictable rotation experience on every spin
+  - Minimum 2 full revolutions (720°) enforced before landing on target
+  - **Frontend changes:**
+    - `PrizeWheel.jsx`: Added `ROTATION_SPEED_DEG_PER_SEC` constant (540°/s)
+    - Dynamic animation duration calculation replaces fixed 3-second duration
+    - Animation timeout synced with calculated duration instead of hardcoded value
+    - Enhanced console logging shows actual animation duration for each spin
+  - **Benefit:** Consistent visual feedback - faster spins feel instantaneous, longer spins feel deliberate
+
+- **Feature: Prize Wheel Starting Position Definition**
+  - Wheel now initializes with defined starting position: pointer at top points to slice 2 (value 300 - middle value)
+  - Creates balanced, professional appearance at game start
+  - Consistent across all matches
+  - **Frontend changes:**
+    - Added `INITIAL_ROTATION = -180` constant at module level
+    - New `useEffect` initializes wheel SVG to starting position on component mount
+    - `currentRotation` state initialized to `INITIAL_ROTATION` instead of 0
+    - Rotation calculations based on true starting point, not arbitrary 0°
+  - **Easy customization:** Change `INITIAL_ROTATION` to point to any slice:
+    - Slice 0 (100): 0° | Slice 1 (200): -72° | Slice 2 (300): -180° (current)
+    - Slice 3 (400): -252° | Slice 4 (500): -324°
+
+- **Feature: Visual Indicators for Landed Slice**
+  - Added top border pointer (golden triangle) above wheel pointing to winning value
+  - Slice background pulses for 5 seconds with brightness effect (phase 1)
+  - Text value glows golden for remaining round after pulse ends (phase 2)
+  - **Phase 1 Timeline (0-5 seconds):**
+    - Landed slice background pulses with brightness (1.0 → 1.5 → 1.0)
+    - Creates immediate visual feedback of landing position
+    - Pointer at top clearly indicates which value was won
+  - **Phase 2 Timeline (5+ seconds):**
+    - Text value becomes golden (#ffd700) and glows
+    - Pulses golden glow exactly 2 times (3 seconds total)
+    - Then holds permanent golden glow until next round
+    - Makes it easy to see which wheel value earned current points
+  - **Frontend changes:**
+    - `PrizeWheel.jsx`: Added `landedSliceIndex` and `showTextGlow` state
+    - Added timeout to trigger text glow after 5 seconds
+    - Conditional class binding applies glow effects to correct slice index
+    - Console logging shows exact slice and value receiving glow
+  - **CSS changes in `styles.css`:**
+    - Added `.wheel-visual::before` pseudo-element for golden top pointer
+    - Added `.wheel-slice.landed .landed-path` for background pulse (5 second duration, no repeat)
+    - Added `.wheel-text.text-glow` with 2-iteration pulse animation
+    - Added `@keyframes slice-pulse` for slice brightness animation
+    - Added `@keyframes text-pulse-glow` for text glow animation
+  - **Alignment with backend:** Glow effects apply to exact value from `matchState.currentWheelValue`
+
+- **Fix: Spin Dependency Array Issue**
+  - Removed `currentRotation` from effect dependency array
+  - Prevented race conditions causing third spin (and beyond) to not animate
+  - Only `[reward, lastReward]` dependencies ensures clean spin triggering
+  - Second spin alignment: Fixed by ensuring minimum rotation calculated before animation starts
+
+## [Unreleased] - Prize Wheel Animation & Alignment Fixes
+
+- 2026-04-22
+- **Fix: Wheel Spin Animation Deceleration**
+  - Changed easing function from `cubic-bezier(.17,.67,.83,.67)` to `cubic-bezier(.42,0,.58,1)` to provide smooth acceleration at start and deceleration at end
+  - Previously animation was speeding up at the end, creating unnatural visual effect
+  - New easing provides more natural motion that feels like the wheel is slowing down as it lands on the target slice
+
+- **Fix: Wheel Slice Alignment & Landing Accuracy**
+  - Fixed critical bug in rotation calculation that caused wheel to land on wrong slices
+  - Issue pattern: Values 100 & 500 would swap (landing on opposite slice), same with 200 & 400, value 300 would land repeatedly
+  - **Root cause:** Original calculation didn't account for the inverted relationship between wheel rotation and fixed pointer
+  - **Solution:** Inverted slice center angle calculation from `sliceCenterAngle = i * SLICE_ANGLE + SLICE_ANGLE / 2` to `sliceCenterAngle = -(i * SLICE_ANGLE + SLICE_ANGLE / 2)`
+  - **Reasoning:** When rotating the wheel by angle X, slice positions move opposite direction relative to fixed pointer at top
+  - **Changes:**
+    - Added `sliceCenterInWheelCoords` to calculate angle in SVG coordinate system
+    - Inverted result to get actual rotation needed to land pointer on that slice
+    - Enhanced debug logging to show expected landing positions for all slices
+    - All 5 reward values now consistently land dead center on correct slice
+  - **Frontend changes:**
+    - `PrizeWheel.jsx`: Updated rotation calculation logic in spin effect
+    - Enhanced console logging with rotation targets for debugging
+    - Added total rotation degrees log on animation start
+
+- **Feature: Reward Display Timing & Persistence**
+  - **Hide reward display during spin animation:**
+    - Added `showRewardDisplay` state to control visibility
+    - Reward hidden when spin starts, displays immediately after animation completes
+  - **Remove pulse effect from landed slice text:**
+    - Removed 5-second animation delay from `text-pulse-glow` animation
+    - Changed animation iteration from 2 cycles to 1 cycle
+    - Text now has single, clean glow effect instead of pulsing
+  - **Text glow starts immediately after animation:**
+    - Changed timing from 5-second fixed delay to match `animationDurationSec`
+    - Text glow and reward display both appear together when wheel finishes spinning
+  - **Reward persists until next round:**
+    - Reward display stays visible after spin completes
+    - Added new `useEffect` that watches `reward` prop
+    - When `reward` becomes `null` (next round starts), display clears automatically
+    - Also resets `showTextGlow` and `landedSliceIndex` for clean slate on next spin
+  - **Frontend changes:**
+    - `PrizeWheel.jsx`: Added `showRewardDisplay` state management
+    - Replaced `pulseTimeoutRef` with `textGlowTimeoutRef` for clearer intent
+    - Added effect to clear reward display when new round begins
+    - Reward display class now bound to `showRewardDisplay` instead of `!!reward`
+  - **CSS changes in `styles.css`:**
+    - Updated `.wheel-text.text-glow` animation to start immediately (removed 3.33s delay)
+    - Changed animation count from `2 forwards` to `1 forwards`
+    - Updated comment to reflect new behavior
+
 ## [Unreleased] - Unified Messaging System Refactor
 
 - 2026-04-21
