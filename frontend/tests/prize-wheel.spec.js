@@ -13,16 +13,18 @@ async function startMatchWithTwoPlayers(browser) {
 
   // Host creates a game
   await hostPage.goto('/')
-  await hostPage.getByPlaceholder('Ange namn').fill('Alice')
+  await hostPage.getByRole('button', { name: 'Create Lobby' }).click()
+  await hostPage.getByPlaceholder('Enter name').fill('Alice')
   await hostPage.getByRole('button', { name: 'Create Game' }).click()
 
   // Get the join code
-  const codeText = await hostPage.locator('p strong').first().textContent()
+  const codeText = await hostPage.locator('#invite-code-display').textContent()
   const joinCode = (codeText ?? '').trim()
 
   // Guest joins the game
   await guestPage.goto('/')
-  await guestPage.getByPlaceholder('Ange namn').fill('Bob')
+  await guestPage.getByRole('button', { name: 'Join Lobby' }).click()
+  await guestPage.getByPlaceholder('Enter name').fill('Bob')
   await guestPage.getByPlaceholder('GUID code').fill(joinCode)
   await guestPage.getByRole('button', { name: 'Join Game' }).click()
 
@@ -31,7 +33,7 @@ async function startMatchWithTwoPlayers(browser) {
   await guestPage.getByRole('button', { name: 'Ready' }).click()
 
   // Wait for match to start
-  await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
+  await expect(hostPage.getByRole('heading', { name: /Round 1\/\d+/ })).toBeVisible()
 
   return { hostContext, guestContext, hostPage, guestPage }
 }
