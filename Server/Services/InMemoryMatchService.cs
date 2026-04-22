@@ -110,8 +110,7 @@ public sealed class InMemoryMatchService : IMatchService
             {
                 if (updated.CurrentRound >= updated.MaxRounds)
                 {
-                    var winner = updated.Players.OrderByDescending(p => p.Score).First();
-                    _engine.FinishMatch(updated, $"{winner.Name} wins the match.");
+                    _engine.FinishMatch(updated, DetermineResult(match));
                 }
                 else
                 {
@@ -378,8 +377,7 @@ public sealed class InMemoryMatchService : IMatchService
 
                         if (match.CurrentRound >= match.MaxRounds)
                         {
-                            var winner = match.Players.OrderByDescending(p => p.Score).First();
-                            _engine.FinishMatch(match, $"{activePlayerName} failed to guess. No reward given. {winner.Name} wins the match!");
+                            _engine.FinishMatch(match, $"{activePlayerName} failed to guess. No reward given. "+ DetermineResult(match));
                         }
                         else
                         {
@@ -400,6 +398,16 @@ public sealed class InMemoryMatchService : IMatchService
                 await BroadcastAsync(match);
             }
         }
+    }
+
+    private static string DetermineResult(MatchState match)
+    {
+        var topScore = match.Players.Max(p => p.Score);
+        var winners = match.Players.Where(p => p.Score == topScore).ToList();
+
+        return winners.Count > 1
+            ? "The match ends in a draw!"
+            : $"{winners[0].Name} wins the match.";
     }
 
     private MatchState GetMatchState(string guidCode)
