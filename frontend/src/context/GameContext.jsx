@@ -15,6 +15,7 @@ export function GameProvider({ children }) {
   const [connection, setConnection] = useState(null);
   const [connectionState, setConnectionState] = useState("Disconnected");
   const [error, setError] = useState("");
+  const [rematchState, setRematchState] = useState(null);
   const apiBaseUrl = trimTrailingSlash(import.meta.env.VITE_API_BASE_URL ?? "");
   const apiPath = (path) => `${apiBaseUrl}${path}`;
   const hubUrl = apiBaseUrl ? `${apiBaseUrl}/hubs/match` : "/hubs/match";
@@ -133,11 +134,92 @@ export function GameProvider({ children }) {
           return null;
         }
         const data = await response.json();
+        setMatchCode(code);
         setMatchState(data);
+        setRematchState(null);
         return data;
       },
+      async requestRematch() {
+        const response = await fetch(
+          apiPath(`/api/matches/${matchCode}/rematch/challenge`),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ playerId }),
+          }
+        );
+        if (!response.ok) {
+          const err = await response
+            .json()
+            .catch(() => ({ error: "Failed to request rematch." }));
+          setError(err.error || "Failed to request rematch.");
+          return null;
+        }
+        const data = await response.json();
+        setRematchState(data);
+        return data;
+      },
+      async acceptRematch() {
+        const response = await fetch(
+          apiPath(`/api/matches/${matchCode}/rematch/respond`),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ playerId, accept: true }),
+          }
+        );
+        if (!response.ok) {
+          const err = await response
+            .json()
+            .catch(() => ({ error: "Failed to accept rematch." }));
+          setError(err.error || "Failed to accept rematch.");
+          return null;
+        }
+        const data = await response.json();
+        setRematchState(data);
+        return data;
+      },
+      async declineRematch() {
+        const response = await fetch(
+          apiPath(`/api/matches/${matchCode}/rematch/respond`),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ playerId, accept: false }),
+          }
+        );
+        if (!response.ok) {
+          const err = await response
+            .json()
+            .catch(() => ({ error: "Failed to decline rematch." }));
+          setError(err.error || "Failed to decline rematch.");
+          return null;
+        }
+        const data = await response.json();
+        setRematchState(null);
+        return data;
+      },
+      async leaveToHome() {
+        if (connection) {
+          try {
+            await connection.stop();
+          } catch {
+            // Ignore shutdown failures when resetting the client state.
+          }
+        }
+
+        setPlayerName("");
+        setPlayerId("");
+        setMatchCode("");
+        setMatchState(null);
+        setConnection(null);
+        setConnectionState("Disconnected");
+        setRematchState(null);
+        setError("");
+        window.history.replaceState({}, "", "/");
+      },
     }),
-    [matchCode, playerId],
+    [matchCode, playerId, connection],
   );
 
   useEffect(() => {
@@ -204,6 +286,18 @@ export function GameProvider({ children }) {
         setMatchState(state);
       });
 
+      hubConnection.on("rematchChallenged", (result) => {
+        setRematchState({ status: "challenged", ...result });
+      });
+
+      hubConnection.on("rematchAccepted", (result) => {
+        setRematchState({ status: "accepted", ...result });
+      });
+
+      hubConnection.on("rematchDeclined", (result) => {
+        setRematchState({ status: "declined", ...result });
+      });
+
       // start and update connection state
       setConnectionState("Connecting");
       hubConnection.start()
@@ -229,7 +323,33 @@ export function GameProvider({ children }) {
       // referencing a local variable that may not be defined yet.
       hubConnectionPromise.then(c => c.stop()).catch(() => { });
     };
-  }, [hubUrl, matchCode]);
+  }, [hubUrl, matchCode, playerId]);
+
+  // Separate effect to handle group switching when matchCode changes without reconnecting
+  useEffect(() => {
+    if (!connection || connectionState !== "Connected" || !matchCode) return;
+
+    const switchGroup = async () => {
+      try {
+        // The connection already uses JoinMatchGroup internally when started
+        // but if matchCode changed after initial connection, we need to rejoin
+        await connection.invoke("JoinMatchGroup", matchCode);
+        console.log("Switched to match group:", matchCode);
+      } catch (err) {
+        console.error("Failed to switch match group:", err);
+        setError("Failed to switch to new match");
+      }
+    };
+
+    switchGroup();
+  }, [matchCode, connection, connectionState]);
+
+  // Switch to rematch when challenger receives rematchAccepted event
+  useEffect(() => {
+    if (rematchState?.status === 'accepted' && rematchState?.rematchGuidCode && rematchState?.rematchGuidCode !== matchCode) {
+      api.fetchMatch(rematchState.rematchGuidCode);
+    }
+  }, [rematchState?.status, rematchState?.rematchGuidCode, matchCode, api]);
 
   return (
     <GameContext.Provider
@@ -239,6 +359,7 @@ export function GameProvider({ children }) {
         playerId,
         matchCode,
         matchState,
+        rematchState,
         error,
         connection,
         connectionState,

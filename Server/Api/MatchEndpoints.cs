@@ -45,6 +45,21 @@ public static class MatchEndpoints
             return Results.Ok(match);
         });
 
+        group.MapPost("/{guidCode}/rematch/challenge", async (string guidCode, RematchChallengeRequest request, IMatchService service) =>
+        {
+            var result = await service.RequestRematchAsync(guidCode, request.PlayerId);
+            return Results.Ok(result);
+        });
+
+        group.MapPost("/{guidCode}/rematch/respond", async (string guidCode, RematchResponseRequest request, IMatchService service) =>
+        {
+            var result = request.Accept
+                ? await service.AcceptRematchAsync(guidCode, request.PlayerId)
+                : await service.DeclineRematchAsync(guidCode, request.PlayerId);
+
+            return Results.Ok(result);
+        });
+
         return app;
     }
 }

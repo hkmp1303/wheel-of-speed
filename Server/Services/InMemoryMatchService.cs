@@ -14,6 +14,9 @@ public interface IMatchService
     Task<MatchStateDto> GetMatchAsync(string guidCode);
     Task<MatchStateDto> SpinAsync(string guidCode, string playerId);
     Task<MatchStateDto> GuessAsync(string guidCode, string playerId, string guess);
+    Task<RematchResultDto> RequestRematchAsync(string guidCode, string challengerPlayerId);
+    Task<RematchResultDto> AcceptRematchAsync(string guidCode, string responderPlayerId);
+    Task<RematchResultDto> DeclineRematchAsync(string guidCode, string responderPlayerId);
 }
 
 public sealed class InMemoryMatchService : IMatchService
@@ -120,6 +123,109 @@ public sealed class InMemoryMatchService : IMatchService
         }
 
         return await BroadcastAsync(match);
+    }
+
+    public async Task<RematchResultDto> RequestRematchAsync(string guidCode, string challengerPlayerId)
+    {
+        var originalMatch = GetMatchState(guidCode);
+        RematchResultDto result;
+
+        lock (originalMatch)
+        {
+            var challenger = originalMatch.Players.FirstOrDefault(p => p.PlayerId == challengerPlayerId)
+                ?? throw new InvalidOperationException("Player not found in this match.");
+
+            var opponent = originalMatch.Players.FirstOrDefault(p => p.PlayerId != challengerPlayerId)
+                ?? throw new InvalidOperationException("A rematch requires an opponent.");
+
+            var rematchMatch = _engine.CreateRematch(originalMatch, challenger.Name, challenger.PlayerId);
+            _matches[rematchMatch.GuidCode] = rematchMatch;
+
+            result = new RematchResultDto
+            {
+                OriginalGuidCode = originalMatch.GuidCode,
+                RematchGuidCode = rematchMatch.GuidCode,
+                ChallengerPlayerId = challengerPlayerId,
+                ResponderPlayerId = opponent.PlayerId
+            };
+        }
+
+        await _hubContext.Clients.Group(originalMatch.GuidCode).SendAsync("rematchChallenged", result);
+        return result;
+    }
+
+    public async Task<RematchResultDto> AcceptRematchAsync(string guidCode, string responderPlayerId)
+    {
+        var originalMatch = GetMatchState(guidCode);
+        MatchState rematchMatch;
+        RematchResultDto result;
+
+        lock (originalMatch)
+        {
+            var responder = originalMatch.Players.FirstOrDefault(p => p.PlayerId == responderPlayerId)
+                ?? throw new InvalidOperationException("Player not found in this match.");
+
+            if (string.IsNullOrWhiteSpace(originalMatch.PendingRematchId))
+            {
+                throw new InvalidOperationException("No rematch challenge is currently pending.");
+            }
+
+            rematchMatch = GetMatchStateById(originalMatch.PendingRematchId);
+
+            lock (rematchMatch)
+            {
+                _engine.AddPlayer(rematchMatch, responder.Name, responder.PlayerId);
+            }
+
+            var challenger = originalMatch.Players.First(p => p.PlayerId != responderPlayerId);
+            originalMatch.PendingRematchId = null;
+
+            result = new RematchResultDto
+            {
+                OriginalGuidCode = originalMatch.GuidCode,
+                RematchGuidCode = rematchMatch.GuidCode,
+                ChallengerPlayerId = challenger.PlayerId,
+                ResponderPlayerId = responderPlayerId
+            };
+        }
+
+        await _hubContext.Clients.Group(originalMatch.GuidCode).SendAsync("rematchAccepted", result);
+        await BroadcastAsync(rematchMatch);
+        return result;
+    }
+
+    public async Task<RematchResultDto> DeclineRematchAsync(string guidCode, string responderPlayerId)
+    {
+        var originalMatch = GetMatchState(guidCode);
+        RematchResultDto result;
+        string? rematchId;
+
+        lock (originalMatch)
+        {
+            var responder = originalMatch.Players.FirstOrDefault(p => p.PlayerId == responderPlayerId)
+                ?? throw new InvalidOperationException("Player not found in this match.");
+
+            rematchId = originalMatch.PendingRematchId;
+            if (string.IsNullOrWhiteSpace(rematchId))
+            {
+                throw new InvalidOperationException("No rematch challenge is currently pending.");
+            }
+
+            _engine.DeclineRematch(originalMatch);
+
+            var challenger = originalMatch.Players.First(p => p.PlayerId != responderPlayerId);
+            result = new RematchResultDto
+            {
+                OriginalGuidCode = originalMatch.GuidCode,
+                RematchGuidCode = string.Empty,
+                ChallengerPlayerId = challenger.PlayerId,
+                ResponderPlayerId = responderPlayerId
+            };
+        }
+
+        RemoveMatchById(rematchId);
+        await _hubContext.Clients.Group(originalMatch.GuidCode).SendAsync("rematchDeclined", result);
+        return result;
     }
 
     private void StartLoop(string guidCode)
@@ -302,6 +408,50 @@ public sealed class InMemoryMatchService : IMatchService
         return _matches.TryGetValue(guidCode.ToUpperInvariant(), out var match)
             ? match
             : throw new KeyNotFoundException("Match not found.");
+    }
+
+    private MatchState GetMatchStateById(string matchId)
+    {
+        foreach (var entry in _matches)
+        {
+            if (entry.Value.MatchId == matchId)
+            {
+                return entry.Value;
+            }
+        }
+
+        throw new KeyNotFoundException("Match not found.");
+    }
+
+    private void RemoveMatchById(string? matchId)
+    {
+        if (string.IsNullOrWhiteSpace(matchId))
+        {
+            return;
+        }
+
+        string? matchGuidCode = null;
+        foreach (var entry in _matches)
+        {
+            if (entry.Value.MatchId == matchId)
+            {
+                matchGuidCode = entry.Key;
+                break;
+            }
+        }
+
+        if (matchGuidCode is null)
+        {
+            return;
+        }
+
+        _matches.TryRemove(matchGuidCode, out _);
+
+        if (_loopTokens.TryRemove(matchGuidCode, out var tokenSource))
+        {
+            tokenSource.Cancel();
+            tokenSource.Dispose();
+        }
     }
 
     private async Task<MatchStateDto> BroadcastAsync(MatchState match)
