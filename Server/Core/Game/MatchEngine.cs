@@ -414,7 +414,7 @@ public sealed class MatchEngine : IMatchEngine
         }
     }
 
-    private static readonly int[] WheelValues = new[] { 50, 100, 200, 300, 500, 1000 };
+    private static readonly int[] WheelValues = new[] { 100, 200, 300, 400, 500 };
 
     /// <summary>
     /// Generate a wheel reward amount.

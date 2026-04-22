@@ -1,6 +1,7 @@
 using Xunit;
 using FluentAssertions;
 using WheelOfSpeed.Services;
+using WheelOfSpeed.Models;
 
 namespace WheelOfSpeed.UnitTests
 {
@@ -57,7 +58,7 @@ namespace WheelOfSpeed.UnitTests
             for (int i = 0; i < 100; i++)
             {
                 var reward = engine.GenerateSpinReward();
-                reward.Should().NotBeOneOf(invalidValues);
+                invalidValues.Should().NotContain(reward);
                 reward.Should().BeOneOf(FRONTEND_WHEEL_VALUES);
             }
         }
@@ -66,14 +67,11 @@ namespace WheelOfSpeed.UnitTests
         public void ApplySpin_SetsCurrentWheelValueToValidValue()
         {
             var engine = new MatchEngine();
-            var match = new System.Func<MatchState>(() =>
-            {
-                var m = engine.CreateMatch("Test");
-                engine.AddPlayer(m, "Player2");
-                engine.MarkReady(m, m.Players[0].PlayerId);
-                engine.MarkReady(m, m.Players[1].PlayerId);
-                return m;
-            })();
+            var match = engine.CreateMatch("Test");
+            engine.AddPlayer(match, "Player2");
+            engine.MarkReady(match, match.Players[0].PlayerId);
+            engine.MarkReady(match, match.Players[1].PlayerId);
+            engine.StartNextRound(match, "example");
 
             var wheelValue = 300;
             engine.ApplySpin(match, match.ActivePlayerId!, wheelValue);

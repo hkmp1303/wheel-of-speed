@@ -1,81 +1,76 @@
 import { test, expect } from '@playwright/test'
 
+/**
+ * Helper to start a match with two players
+ * Returns both contexts and pages after both players are ready and match has started
+ */
+async function startMatchWithTwoPlayers(browser) {
+  const hostContext = await browser.newContext()
+  const guestContext = await browser.newContext()
+
+  const hostPage = await hostContext.newPage()
+  const guestPage = await guestContext.newPage()
+
+  // Host creates a game
+  await hostPage.goto('/')
+  await hostPage.getByPlaceholder('Ange namn').fill('Alice')
+  await hostPage.getByRole('button', { name: 'Create Game' }).click()
+
+  // Get the join code
+  const codeText = await hostPage.locator('p strong').first().textContent()
+  const joinCode = (codeText ?? '').trim()
+
+  // Guest joins the game
+  await guestPage.goto('/')
+  await guestPage.getByPlaceholder('Ange namn').fill('Bob')
+  await guestPage.getByPlaceholder('GUID code').fill(joinCode)
+  await guestPage.getByRole('button', { name: 'Join Game' }).click()
+
+  // Both players mark ready - match starts automatically
+  await hostPage.getByRole('button', { name: 'Ready' }).click()
+  await guestPage.getByRole('button', { name: 'Ready' }).click()
+
+  // Wait for match to start
+  await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
+
+  return { hostContext, guestContext, hostPage, guestPage }
+}
+
+test('wheel renders with top pointer indicator', async ({ browser }) => {
+  const { hostContext, guestContext, hostPage } = await startMatchWithTwoPlayers(browser)
+
+  // Check that wheel visual container exists
+  const wheelVisual = hostPage.locator('.wheel-visual')
+  await expect(wheelVisual).toBeVisible()
+
+  // Pointer is added via CSS ::before pseudo-element
+  // We can verify the container has the class that applies the pointer
+  await expect(wheelVisual).toHaveClass(/wheel-visual/)
+
+  await hostContext.close()
+  await guestContext.close()
+})
+
+test('wheel has all 5 slices visible', async ({ browser }) => {
+  const { hostContext, guestContext, hostPage } = await startMatchWithTwoPlayers(browser)
+
+  const slices = hostPage.locator('.wheel-slice')
+  await expect(slices).toHaveCount(5)
+
+  // Check each slice has its value text
+  const wheelValues = ['100', '200', '300', '400', '500']
+  for (let i = 0; i < 5; i++) {
+    const text = hostPage.locator('.wheel-text').nth(i)
+    await expect(text).toContainText(new RegExp(wheelValues[i]))
+  }
+
+  await hostContext.close()
+  await guestContext.close()
+})
+
 test.describe('Prize Wheel Animation & Visual Indicators', () => {
-  test.beforeEach(async ({ browser }) => {
-    // Setup: Create match with two players ready
-    const hostContext = await browser.newContext()
-    const guestContext = await browser.newContext()
-
-    const hostPage = await hostContext.newPage()
-    const guestPage = await guestContext.newPage()
-
-    await hostPage.goto('/')
-    await hostPage.getByPlaceholder('Ange namn').fill('Alice')
-    await hostPage.getByRole('button', { name: 'Create Game' }).click()
-
-    const codeText = await hostPage.locator('p strong').first().textContent()
-    const joinCode = (codeText ?? '').trim()
-
-    await guestPage.goto('/')
-    await guestPage.getByPlaceholder('Ange namn').fill('Bob')
-    await guestPage.getByPlaceholder('GUID code').fill(joinCode)
-    await guestPage.getByRole('button', { name: 'Join Game' }).click()
-
-    await hostPage.getByRole('button', { name: 'Ready' }).click()
-    await guestPage.getByRole('button', { name: 'Ready' }).click()
-
-    await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
-  })
-
-  test('wheel renders with top pointer indicator', async ({ page }) => {
-    await page.goto('/')
-
-    // Check that wheel visual container exists
-    const wheelVisual = page.locator('.wheel-visual')
-    await expect(wheelVisual).toBeVisible()
-
-    // Pointer is added via CSS ::before pseudo-element
-    // We can verify the container has the class that applies the pointer
-    await expect(wheelVisual).toHaveClass(/wheel-visual/)
-  })
-
-  test('wheel has all 5 slices visible', async ({ page }) => {
-    await page.goto('/')
-
-    const slices = page.locator('.wheel-slice')
-    await expect(slices).toHaveCount(5)
-
-    // Check each slice has its value text
-    const wheelValues = ['100', '200', '300', '400', '500']
-    for (let i = 0; i < 5; i++) {
-      const text = page.locator('.wheel-text').nth(i)
-      await expect(text).toContainText(new RegExp(wheelValues[i]))
-    }
-  })
-
   test('active player can spin wheel and see landing indicator', async ({ browser }) => {
-    const hostContext = await browser.newContext()
-    const guestContext = await browser.newContext()
-
-    const hostPage = await hostContext.newPage()
-    const guestPage = await guestContext.newPage()
-
-    // Setup match
-    await hostPage.goto('/')
-    await hostPage.getByPlaceholder('Ange namn').fill('Alice')
-    await hostPage.getByRole('button', { name: 'Create Game' }).click()
-
-    const codeText = await hostPage.locator('p strong').first().textContent()
-    const joinCode = (codeText ?? '').trim()
-
-    await guestPage.goto('/')
-    await guestPage.getByPlaceholder('Ange namn').fill('Bob')
-    await guestPage.getByPlaceholder('GUID code').fill(joinCode)
-    await guestPage.getByRole('button', { name: 'Join Game' }).click()
-
-    await hostPage.getByRole('button', { name: 'Ready' }).click()
-    await guestPage.getByRole('button', { name: 'Ready' }).click()
-    await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
+    const { hostContext, guestContext, hostPage, guestPage } = await startMatchWithTwoPlayers(browser)
 
     // Determine who is active
     const hostSpinEnabled = await hostPage.getByRole('button', { name: 'Spin' }).isEnabled()
@@ -85,7 +80,7 @@ test.describe('Prize Wheel Animation & Visual Indicators', () => {
     await activePage.getByRole('button', { name: 'Spin' }).click()
 
     // Wait for spin animation to complete
-    await activePage.getByRole('button', { name: 'Spin' }).toBeDisabled()
+    await expect(activePage.getByRole('button', { name: 'Spin' })).toBeDisabled()
 
     // Verify landed slice gets glow class (after pulse completes at 5 seconds)
     // For this test, check that landed class is applied
@@ -101,28 +96,7 @@ test.describe('Prize Wheel Animation & Visual Indicators', () => {
   })
 
   test('text glow appears after landing animation', async ({ browser }) => {
-    const hostContext = await browser.newContext()
-    const guestContext = await browser.newContext()
-
-    const hostPage = await hostContext.newPage()
-    const guestPage = await guestContext.newPage()
-
-    // Setup match
-    await hostPage.goto('/')
-    await hostPage.getByPlaceholder('Ange namn').fill('Alice')
-    await hostPage.getByRole('button', { name: 'Create Game' }).click()
-
-    const codeText = await hostPage.locator('p strong').first().textContent()
-    const joinCode = (codeText ?? '').trim()
-
-    await guestPage.goto('/')
-    await guestPage.getByPlaceholder('Ange namn').fill('Bob')
-    await guestPage.getByPlaceholder('GUID code').fill(joinCode)
-    await guestPage.getByRole('button', { name: 'Join Game' }).click()
-
-    await hostPage.getByRole('button', { name: 'Ready' }).click()
-    await guestPage.getByRole('button', { name: 'Ready' }).click()
-    await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
+    const { hostContext, guestContext, hostPage, guestPage } = await startMatchWithTwoPlayers(browser)
 
     // Find active player
     const hostSpinEnabled = await hostPage.getByRole('button', { name: 'Spin' }).isEnabled()
@@ -130,7 +104,7 @@ test.describe('Prize Wheel Animation & Visual Indicators', () => {
 
     // Spin wheel
     await activePage.getByRole('button', { name: 'Spin' }).click()
-    await activePage.getByRole('button', { name: 'Spin' }).toBeDisabled()
+    await expect(activePage.getByRole('button', { name: 'Spin' })).toBeDisabled()
 
     // Wait for text glow to appear (starts after ~5 seconds)
     const textGlow = activePage.locator('.wheel-text.text-glow')
