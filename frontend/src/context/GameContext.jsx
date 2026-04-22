@@ -22,12 +22,12 @@ export function GameProvider({ children }) {
 
   const api = useMemo(
     () => ({
-      async createMatch(name, difficulty = "Normal") {
+      async createMatch(name, difficulty = "Normal", maxRounds = 4) {
         setError("");
         const response = await fetch(apiPath("/api/matches"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ hostName: name, difficulty }),
+          body: JSON.stringify({ hostName: name, difficulty, maxRounds }),
         });
         if (!response.ok) {
           const err = await response
