@@ -25,18 +25,4 @@
   --glow-primary: 0 0 20px rgba(79, 157, 255, 0.6);
   --glow-secondary: 0 0 15px rgba(245, 197, 66, 0.6);
   --glow-primary-enhanced: 0 0 40px rgba(79, 157, 255, 0.8);
-
-  /* Slice Colors */
-  --slice-1: #2a4f80;
-  --slice-2: #1f3f66;
-  --slice-3: #183353;
-  --slice-4: #a8842a;
-  --slice-5: #8f3a2a;
-  /*
-  "#2f5f9e",
-  "#1f4c85",
-  "#b8932f",
-  "#b84a28",
-  "#b83838"
-  */
 }

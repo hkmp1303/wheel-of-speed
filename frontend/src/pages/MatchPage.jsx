@@ -118,15 +118,10 @@ export default function MatchPage() {
     // Message will be cleared by useMessageProcessor when spin completes and state updates
   }
 
-  function handleSpinComplete(wheelReward) {
+  function handleSpinComplete() {
     setSpinPending(false)
     setGuessDisabled(false)
     // Message will be displayed from matchState via the useEffect when server broadcasts
-  }
-
-  function handleWheelAnimationComplete(reward) {
-    // Animation complete, but spinPending will be cleared when server broadcasts matchUpdated
-    console.log(`Wheel animation complete for reward: ${reward}`)
   }
 
   async function handleSpinButton() {
@@ -186,11 +181,7 @@ export default function MatchPage() {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
-          <PrizeWheel
-            spinPending={spinPending}
-            reward={matchState.currentWheelValue}
-            onSpinComplete={handleWheelAnimationComplete}
-          />
+          <PrizeWheel spinPending={spinPending} reward={matchState.currentWheelValue} />
           <div className="word-display">
             {matchState.maskedWord
             ? matchState.maskedWord.split(' ').map((char, i) => (
