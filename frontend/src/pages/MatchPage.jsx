@@ -185,7 +185,7 @@ export default function MatchPage() {
             <p>Timer: <strong>{matchState.secondsLeft}</strong></p>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+        <div className="game-components">
           <PrizeWheel
             spinPending={spinPending}
             reward={matchState.currentWheelValue}
