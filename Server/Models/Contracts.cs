@@ -20,6 +20,16 @@ public sealed record JoinMatchRequest(string PlayerName);
 public sealed record ReadyRequest(string PlayerId);
 public sealed record SpinRequest(string PlayerId);
 public sealed record GuessRequest(string PlayerId, string Guess);
+public sealed record RematchChallengeRequest(string PlayerId);
+public sealed record RematchResponseRequest(string PlayerId, bool Accept);
+
+public sealed class RematchResultDto
+{
+    public string OriginalGuidCode { get; init; } = string.Empty;
+    public string RematchGuidCode { get; init; } = string.Empty;
+    public string ChallengerPlayerId { get; init; } = string.Empty;
+    public string ResponderPlayerId { get; init; } = string.Empty;
+}
 
 public sealed class MatchStateDto
 {
@@ -74,6 +84,7 @@ public sealed class MatchState
     public int LetterRevealIntervalSeconds { get; set; } = 8;
     public List<string> UsedWords { get; set; } = [];
     public Difficulty Difficulty { get; set; } = Difficulty.Normal;
+    public string? PendingRematchId { get; set; }
 }
 
 public sealed class PlayerState

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import css from "./PrizeWheel.module.css";
 
 const VALUES = [100, 200, 300, 400, 500];
 
@@ -219,27 +220,29 @@ export default function PrizeWheel({ spinPending = false, reward = null, onSpinC
   }, [reward, lastReward]);
 
   return (
-    <div className="prize-wheel" aria-hidden>
-      <div className="wheel-visual">
+    <div className={css.prizeWheel} aria-hidden>
+      <div className={css.wheelVisual}>
         <svg width="200" height="200" viewBox="-50 -50 100 100" preserveAspectRatio="xMidYMid meet">
-            <circle className="wheel-outline" r="45" cx="0" cy="0" />
+          <circle className={css.wheelOutline} r="45" cx="0" cy="0" />
             <g ref={wheelGroupRef} id="wheelGroup">
             {/* Render wheel slices */}
             {slices.map((slice) => (
               <g
                 key={slice.id}
-                className={`wheel-slice ${landedSliceIndex === slice.id ? 'landed' : ''}`}
+                className={`${css.wheelSlice} ${landedSliceIndex === slice.id ? css.landed : ''}`}
+                data-landed={landedSliceIndex === slice.id}
               >
                 <path
                   d={slice.pathD}
                   fill={slice.fill}
-                  className={landedSliceIndex === slice.id && !showTextGlow ? 'landed-path' : ''}
+                  className={landedSliceIndex === slice.id && !showTextGlow ? css.landedPath : ''}
                 />
                 <text
                   x={slice.textX}
                   y={slice.textY}
                   transform={`rotate(${slice.textRotate})`}
-                  className={`wheel-text ${landedSliceIndex === slice.id && showTextGlow ? 'text-glow' : ''}`}
+                  className={`${css.wheelText} ${landedSliceIndex === slice.id && showTextGlow ? css.textGlow : ''}`}
+                  data-text-glow={landedSliceIndex === slice.id && showTextGlow}
                 >
                   {slice.value}
                 </text>
@@ -250,7 +253,7 @@ export default function PrizeWheel({ spinPending = false, reward = null, onSpinC
         </svg>
       </div>
 
-      <div className={`reward-display${showRewardDisplay ? "" : " hidden"}`}>
+      <div className={`${css.rewardDisplay} ${showRewardDisplay ? "" : css.hidden}`}>
         Reward: {reward}
       </div>
     </div>

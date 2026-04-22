@@ -5,7 +5,7 @@ namespace WheelOfSpeed.Services;
 public interface IMatchEngine
 {
     MatchState CreateMatch(string hostName);
-    MatchState AddPlayer(MatchState match, string playerName);
+    MatchState AddPlayer(MatchState match, string playerName, string? playerId = null);
     MatchState MarkReady(MatchState match, string playerId);
     MatchState StartNextRound(MatchState match, string word);
     MatchState RotateTurn(MatchState match);
@@ -16,6 +16,8 @@ public interface IMatchEngine
     MatchState EndRound(MatchState match, string message);
     MatchState FinishMatch(MatchState match, string message);
     MatchStateDto ToDto(MatchState match);
+    MatchState CreateRematch(MatchState finishedMatch, string challengerName, string? challengerPlayerId = null);
+    MatchState DeclineRematch(MatchState finishedMatch);
 }
 
 public sealed class MatchEngine : IMatchEngine
@@ -30,7 +32,7 @@ public sealed class MatchEngine : IMatchEngine
         return match;
     }
 
-    public MatchState AddPlayer(MatchState match, string playerName)
+    public MatchState AddPlayer(MatchState match, string playerName, string? playerId = null)
     {
         ValidateNotEmpty(playerName, nameof(playerName));
         EnsureLobby(match);
@@ -42,7 +44,12 @@ public sealed class MatchEngine : IMatchEngine
             throw new InvalidOperationException("A player with that name already exists in the match.");
         }
 
-        match.Players.Add(new PlayerState { Name = trimmedName });
+        var playerState = new PlayerState { Name = trimmedName };
+        if (!string.IsNullOrWhiteSpace(playerId))
+        {
+            playerState.PlayerId = playerId;
+        }
+        match.Players.Add(playerState);
         match.LastMessage = $"{trimmedName} joined the lobby.";
         return match;
     }
@@ -340,6 +347,42 @@ public sealed class MatchEngine : IMatchEngine
         RevealAllLetters(match);
 
         return match;
+    }
+
+    public MatchState CreateRematch(MatchState finishedMatch, string challengerName, string? challengerPlayerId = null)
+    {
+        ValidateNotEmpty(challengerName, nameof(challengerName));
+
+        if (finishedMatch.Status != MatchStatus.Finished)
+            throw new InvalidOperationException("A rematch can only be initiated from a finished match.");
+
+        if (finishedMatch.PendingRematchId is not null)
+            throw new InvalidOperationException("A rematch is already pending for this match.");
+
+        var newMatch = new MatchState
+        {
+            Difficulty = finishedMatch.Difficulty,
+            MaxRounds = finishedMatch.MaxRounds
+        };
+
+        var playerState = new PlayerState { Name = challengerName.Trim() };
+        if (!string.IsNullOrWhiteSpace(challengerPlayerId))
+        {
+            playerState.PlayerId = challengerPlayerId;
+        }
+        newMatch.Players.Add(playerState);
+        newMatch.LastMessage = "Rematch lobby created. Waiting for opponent.";
+
+        finishedMatch.PendingRematchId = newMatch.MatchId;
+
+        return newMatch;
+    }
+
+    public MatchState DeclineRematch(MatchState finishedMatch)
+    {
+        finishedMatch.PendingRematchId = null;
+        finishedMatch.LastMessage = "Rematch was declined.";
+        return finishedMatch;
     }
 
     public MatchStateDto ToDto(MatchState match)

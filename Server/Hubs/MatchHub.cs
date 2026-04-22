@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Threading.Tasks;
+using WheelOfSpeed.Models;
 using WheelOfSpeed.Services;
 
 namespace WheelOfSpeed.Hubs;
@@ -48,5 +49,29 @@ public sealed class MatchHub : Hub
 
         // Return the DTO to the caller for convenience
         return dto;
+    }
+
+    public async Task<RematchResultDto> RequestRematch(string guidCode, string playerId)
+    {
+        if (string.IsNullOrWhiteSpace(guidCode))
+            throw new HubException("Invalid match id");
+
+        if (string.IsNullOrWhiteSpace(playerId))
+            throw new HubException("Unauthorized");
+
+        return await _matchService.RequestRematchAsync(guidCode, playerId);
+    }
+
+    public async Task<RematchResultDto> RespondRematch(string guidCode, string playerId, bool accept)
+    {
+        if (string.IsNullOrWhiteSpace(guidCode))
+            throw new HubException("Invalid match id");
+
+        if (string.IsNullOrWhiteSpace(playerId))
+            throw new HubException("Unauthorized");
+
+        return accept
+            ? await _matchService.AcceptRematchAsync(guidCode, playerId)
+            : await _matchService.DeclineRematchAsync(guidCode, playerId);
     }
 }
