@@ -1,6 +1,6 @@
 using WheelOfSpeed.Models;
 
-namespace WheelOfSpeed.Services;
+namespace WheelOfSpeed;
 
 public interface IMatchEngine
 {

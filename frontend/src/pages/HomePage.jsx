@@ -1,10 +1,13 @@
-import { useState } from "react";
-import { useGame } from "../context/GameContext";
+import { useState } from 'react'
+import CreateLobbyForm from '../components/lobby/CreateLobbyForm'
+import JoinLobbyForm from '../components/lobby/JoinLobbyForm'
+import { useGame } from '../context/GameContext'
 
 export default function HomePage() {
-  const { createMatch, joinMatch } = useGame();
-  const [name, setName] = useState("");
-  const [joinCode, setJoinCode] = useState("");
+  const { createMatch, joinMatch } = useGame()
+  const [view, setView] = useState('menu')
+  const [name, setName] = useState('')
+  const [joinCode, setJoinCode] = useState('')
 
   return (
     <main className="page">
@@ -12,37 +15,33 @@ export default function HomePage() {
         <h1>Wheel of Speed</h1>
         <p>Guess the word, simple as that.</p>
 
-        <label>Namn</label>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Ange namn"
-        />
+        {view === 'menu' && (
+          <div className="actions">
+            <button onClick={() => setView('create')}>Create Lobby</button>
+            <button onClick={() => setView('join')}>Join Lobby</button>
+          </div>
+        )}
 
-        <div className="actions">
-          <button onClick={() => createMatch(name)} disabled={!name.trim()}>
-            Create Game
-          </button>
-        </div>
+        {view === 'create' && (
+          <CreateLobbyForm
+            name={name}
+            onNameChange={setName}
+            onSubmit={() => createMatch(name)}
+            onBack={() => setView('menu')}
+          />
+        )}
 
-        <hr />
-
-        <label>Join via code</label>
-        <input
-          value={joinCode}
-          onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-          placeholder="GUID code"
-        />
-
-        <div className="actions">
-          <button
-            onClick={() => joinMatch(joinCode, name)}
-            disabled={!name.trim() || !joinCode.trim()}
-          >
-            Join Game
-          </button>
-        </div>
+        {view === 'join' && (
+          <JoinLobbyForm
+            name={name}
+            joinCode={joinCode}
+            onNameChange={setName}
+            onJoinCodeChange={(value) => setJoinCode(value.toUpperCase())}
+            onSubmit={() => joinMatch(joinCode, name)}
+            onBack={() => setView('menu')}
+          />
+        )}
       </section>
     </main>
-  );
+  )
 }
