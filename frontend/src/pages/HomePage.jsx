@@ -4,10 +4,11 @@ import JoinLobbyForm from '../components/lobby/JoinLobbyForm'
 import { useGame } from '../context/GameContext'
 
 export default function HomePage() {
-  const { createMatch, joinMatch } = useGame()
+  const { createMatch, joinMatch, error } = useGame()
   const [view, setView] = useState('menu')
   const [name, setName] = useState('')
   const [joinCode, setJoinCode] = useState('')
+  const [difficulty, setDifficulty] = useState('Medium')
 
   return (
     <main className="page">
@@ -25,8 +26,10 @@ export default function HomePage() {
         {view === 'create' && (
           <CreateLobbyForm
             name={name}
+            difficulty={difficulty}
             onNameChange={setName}
-            onSubmit={() => createMatch(name)}
+            onDifficultyChange={setDifficulty}
+            onSubmit={() => createMatch(name.trim(), difficulty)}
             onBack={() => setView('menu')}
           />
         )}
@@ -36,11 +39,13 @@ export default function HomePage() {
             name={name}
             joinCode={joinCode}
             onNameChange={setName}
-            onJoinCodeChange={(value) => setJoinCode(value.toUpperCase())}
-            onSubmit={() => joinMatch(joinCode, name)}
+            onJoinCodeChange={(value) => setJoinCode(value.replace(/\s+/g, '').toUpperCase())}
+            onSubmit={() => joinMatch(joinCode.trim(), name.trim())}
             onBack={() => setView('menu')}
           />
         )}
+
+        {error && <p className="error">{error}</p>}
       </section>
     </main>
   )

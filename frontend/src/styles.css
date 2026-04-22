@@ -18,7 +18,8 @@ body {
   margin: 0;
 }
 button,
-input {
+input,
+select {
   font: inherit;
   transition: all 0.3s ease;
 }
@@ -95,6 +96,7 @@ input {
   gap: 0.75rem;
 }
 .guess-form input,
+select,
 input {
   width: 100%;
   padding: 0.8rem 1rem;

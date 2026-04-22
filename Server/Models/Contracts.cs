@@ -8,7 +8,14 @@ public enum MatchStatus
     Finished
 }
 
-public sealed record CreateMatchRequest(string HostName);
+public enum Difficulty
+{
+    Easy,
+    Medium,
+    Hard
+}
+
+public sealed record CreateMatchRequest(string HostName, Difficulty Difficulty = Difficulty.Medium);
 public sealed record JoinMatchRequest(string PlayerName);
 public sealed record ReadyRequest(string PlayerId);
 public sealed record SpinRequest(string PlayerId);
@@ -18,6 +25,7 @@ public sealed class MatchStateDto
 {
     public string MatchId { get; init; } = string.Empty;
     public string GuidCode { get; init; } = string.Empty;
+    public Difficulty Difficulty { get; init; }
     public MatchStatus Status { get; init; }
     public int CurrentRound { get; init; }
     public int MaxRounds { get; init; }
@@ -43,6 +51,7 @@ public sealed class MatchState
 {
     public string MatchId { get; set; } = Guid.NewGuid().ToString("N");
     public string GuidCode { get; set; } = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+    public Difficulty Difficulty { get; set; } = Difficulty.Medium;
     public MatchStatus Status { get; set; } = MatchStatus.Lobby;
     public int CurrentRound { get; set; } = 0;
     public int MaxRounds { get; set; } = 3;

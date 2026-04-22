@@ -7,7 +7,7 @@ namespace WheelOfSpeed.Services;
 
 public interface IMatchService
 {
-    Task<MatchStateDto> CreateMatchAsync(string hostName);
+    Task<MatchStateDto> CreateMatchAsync(string hostName, Difficulty difficulty);
     Task<MatchStateDto> JoinMatchAsync(string guidCode, string playerName);
     Task<MatchStateDto> MarkReadyAsync(string guidCode, string playerId);
     Task<MatchStateDto> GetMatchAsync(string guidCode);
@@ -30,9 +30,9 @@ public sealed class InMemoryMatchService : IMatchService
         _hubContext = hubContext;
     }
 
-    public async Task<MatchStateDto> CreateMatchAsync(string hostName)
+    public async Task<MatchStateDto> CreateMatchAsync(string hostName, Difficulty difficulty)
     {
-        var match = _engine.CreateMatch(hostName);
+        var match = _engine.CreateMatch(hostName, difficulty);
         _matches[match.GuidCode] = match;
         return await BroadcastAsync(match);
     }

@@ -20,12 +20,12 @@ export function GameProvider({ children }) {
 
   const api = useMemo(
     () => ({
-      async createMatch(name) {
+      async createMatch(name, difficulty = "Medium") {
         setError("");
         const response = await fetch(apiPath("/api/matches"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ hostName: name }),
+          body: JSON.stringify({ hostName: name, difficulty }),
         });
         if (!response.ok) {
           const err = await response
@@ -136,6 +136,13 @@ export function GameProvider({ children }) {
         const data = await response.json();
         setMatchState(data);
         return data;
+      },
+      resetToHome() {
+        setError("");
+        setPlayerName("");
+        setPlayerId("");
+        setMatchCode("");
+        setMatchState(null);
       },
     }),
     [apiBaseUrl, matchCode, playerId],
