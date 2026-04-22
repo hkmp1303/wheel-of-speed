@@ -59,7 +59,9 @@ export function GameProvider({ children }) {
           return null;
         }
         const data = await response.json();
-        const joinedPlayer = data.players.find((player) => player.name.toLowerCase() === name.toLowerCase());
+        const joinedPlayer = data.players.find(
+          (player) => player.name.toLowerCase() === name.toLowerCase(),
+        );
         setPlayerName(name);
         setPlayerId(joinedPlayer?.playerId ?? "");
         setMatchCode(data.guidCode);
@@ -110,8 +112,8 @@ export function GameProvider({ children }) {
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ playerId, guess })
-          }
+            body: JSON.stringify({ playerId, guess }),
+          },
         );
         if (!response.ok) {
           const err = await response
@@ -146,7 +148,7 @@ export function GameProvider({ children }) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ playerId }),
-          }
+          },
         );
         if (!response.ok) {
           const err = await response
@@ -166,7 +168,7 @@ export function GameProvider({ children }) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ playerId, accept: true }),
-          }
+          },
         );
         if (!response.ok) {
           const err = await response
@@ -186,7 +188,7 @@ export function GameProvider({ children }) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ playerId, accept: false }),
-          }
+          },
         );
         if (!response.ok) {
           const err = await response
@@ -238,9 +240,13 @@ export function GameProvider({ children }) {
           if (res.ok) {
             return `${apiBaseUrl}/hubs/match`;
           }
-          throw new Error(`Backend health check returned ${res.status} at ${health}`);
+          throw new Error(
+            `Backend health check returned ${res.status} at ${health}`,
+          );
         } catch (err) {
-          throw new Error(`Backend not reachable at ${health}: ${err?.message ?? err}`);
+          throw new Error(
+            `Backend not reachable at ${health}: ${err?.message ?? err}`,
+          );
         }
       }
 
@@ -275,7 +281,10 @@ export function GameProvider({ children }) {
       // pick it up as Context.UserIdentifier in the future (requires server
       // configuration). For now, keep the connection standard and rely on
       // explicit playerId arguments for hub methods.
-      const urlWithQuery = matchCode && playerId ? `${hubUrl}?playerId=${encodeURIComponent(playerId)}` : hubUrl;
+      const urlWithQuery =
+        matchCode && playerId
+          ? `${hubUrl}?playerId=${encodeURIComponent(playerId)}`
+          : hubUrl;
 
       const hb = new signalR.HubConnectionBuilder()
         .withUrl(urlWithQuery)
@@ -300,47 +309,50 @@ export function GameProvider({ children }) {
     });
 
     // Create connection when resolved
-    hubConnectionPromise.then(hubConnection => {
-      hubConnection.on("matchUpdated", (state) => {
-        setMatchState(state);
-      });
-
-      hubConnection.on("rematchChallenged", (result) => {
-        setRematchState({ status: "challenged", ...result });
-      });
-
-      hubConnection.on("rematchAccepted", (result) => {
-        setRematchState({ status: "accepted", ...result });
-      });
-
-      hubConnection.on("rematchDeclined", (result) => {
-        setRematchState({ status: "declined", ...result });
-      });
-
-      // start and update connection state
-      setConnectionState("Connecting");
-      hubConnection.start()
-        .then(() => {
-          console.log("SignalR connected");
-          setConnectionState("Connected");
-          return hubConnection.invoke("JoinMatchGroup", matchCode);
-        })
-        .catch((err) => {
-          console.error("SignalR start failed", err);
-          setConnectionState("Disconnected");
-          setError("Could not connect to realtime updates.");
+    hubConnectionPromise
+      .then((hubConnection) => {
+        hubConnection.on("matchUpdated", (state) => {
+          setMatchState(state);
         });
 
-      setConnection(hubConnection);
-    }).catch(err => {
-      console.error("Failed to resolve hub URL", err);
-      setError("Could not find backend for realtime updates");
-    });
+        hubConnection.on("rematchChallenged", (result) => {
+          setRematchState({ status: "challenged", ...result });
+        });
+
+        hubConnection.on("rematchAccepted", (result) => {
+          setRematchState({ status: "accepted", ...result });
+        });
+
+        hubConnection.on("rematchDeclined", (result) => {
+          setRematchState({ status: "declined", ...result });
+        });
+
+        // start and update connection state
+        setConnectionState("Connecting");
+        hubConnection
+          .start()
+          .then(() => {
+            console.log("SignalR connected");
+            setConnectionState("Connected");
+            return hubConnection.invoke("JoinMatchGroup", matchCode);
+          })
+          .catch((err) => {
+            console.error("SignalR start failed", err);
+            setConnectionState("Disconnected");
+            setError("Could not connect to realtime updates.");
+          });
+
+        setConnection(hubConnection);
+      })
+      .catch((err) => {
+        console.error("Failed to resolve hub URL", err);
+        setError("Could not find backend for realtime updates");
+      });
 
     return () => {
       // Stop the connection if it was created. Use the promise to avoid
       // referencing a local variable that may not be defined yet.
-      hubConnectionPromise.then(c => c.stop()).catch(() => { });
+      hubConnectionPromise.then((c) => c.stop()).catch(() => {});
     };
   }, [hubUrl, matchCode, playerId]);
 
@@ -365,7 +377,11 @@ export function GameProvider({ children }) {
 
   // Switch to rematch when challenger receives rematchAccepted event
   useEffect(() => {
-    if (rematchState?.status === 'accepted' && rematchState?.rematchGuidCode && rematchState?.rematchGuidCode !== matchCode) {
+    if (
+      rematchState?.status === "accepted" &&
+      rematchState?.rematchGuidCode &&
+      rematchState?.rematchGuidCode !== matchCode
+    ) {
       api.fetchMatch(rematchState.rematchGuidCode);
     }
   }, [rematchState?.status, rematchState?.rematchGuidCode, matchCode, api]);
