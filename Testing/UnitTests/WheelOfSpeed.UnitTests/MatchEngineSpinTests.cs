@@ -67,7 +67,7 @@ namespace WheelOfSpeed.UnitTests
         public void ApplySpin_SetsCurrentWheelValueToValidValue()
         {
             var engine = new MatchEngine();
-            var match = engine.CreateMatch("Test");
+            var match = engine.CreateMatch("Test", Difficulty.Normal);
             engine.AddPlayer(match, "Player2");
             engine.MarkReady(match, match.Players[0].PlayerId);
             engine.MarkReady(match, match.Players[1].PlayerId);
