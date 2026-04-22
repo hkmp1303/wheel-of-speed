@@ -1,11 +1,19 @@
 import { useState } from "react";
+import CreateLobbyForm from "../components/lobby/CreateLobbyForm";
+import JoinLobbyForm from "../components/lobby/JoinLobbyForm";
 import { useGame } from "../context/GameContext";
 
-export default function HomePage() {
-  const { createMatch, joinMatch } = useGame();
+function parseJoinPath() {
   const pathMatch = window.location.pathname.match(/^\/join\/([^/]+)$/i);
-  const initialJoinCode = pathMatch?.[1]?.toUpperCase() ?? "";
-  const isJoinFlow = Boolean(initialJoinCode);
+  const code = pathMatch?.[1]?.replace(/\s+/g, "").toUpperCase() ?? "";
+  return { isJoinDeepLink: Boolean(code), initialJoinCode: code };
+}
+
+export default function HomePage() {
+  const { createMatch, joinMatch, error } = useGame();
+  const { isJoinDeepLink, initialJoinCode } = parseJoinPath();
+
+  const [view, setView] = useState(isJoinDeepLink ? "join" : "menu");
   const [name, setName] = useState("");
   const [joinCode, setJoinCode] = useState(initialJoinCode);
   const [difficulty, setDifficulty] = useState("Normal");
@@ -16,56 +24,43 @@ export default function HomePage() {
         <h1>Wheel of Speed</h1>
         <p>Guess the word, simple as that.</p>
 
-        <label>Namn</label>
-        <input
-          id={isJoinFlow ? "player-name-input" : "host-name-input"}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Ange namn"
-        />
-
-        <label>Svårighetsgrad</label>
-        <div className="actions">
-          {["Easy", "Normal", "Hard"].map((d) => (
-            <button
-              key={d}
-              onClick={() => setDifficulty(d)}
-              style={{
-                background: difficulty === d ? "#5b8cff" : "#171c26",
-                border: "1px solid #2b3342"
-              }}
-            >
-              {d}
+        {view === "menu" && (
+          <div className="actions">
+            <button type="button" onClick={() => setView("create")}>
+              Create Lobby
             </button>
-          ))}
-        </div>
+            <button type="button" onClick={() => setView("join")}>
+              Join Lobby
+            </button>
+          </div>
+        )}
 
-        <div className="actions">
-          <button onClick={() => createMatch(name, difficulty)} disabled={!name.trim()}>
-            Create Game
-          </button>
-        </div>
+        {view === "create" && (
+          <CreateLobbyForm
+            name={name}
+            difficulty={difficulty}
+            onNameChange={setName}
+            onDifficultyChange={setDifficulty}
+            onSubmit={() => void createMatch(name.trim(), difficulty)}
+            onBack={() => setView("menu")}
+          />
+        )}
 
-        {!isJoinFlow && <hr />}
+        {view === "join" && (
+          <JoinLobbyForm
+            name={name}
+            joinCode={joinCode}
+            onNameChange={setName}
+            onJoinCodeChange={(value) =>
+              setJoinCode(value.replace(/\s+/g, "").toUpperCase())
+            }
+            onSubmit={() => void joinMatch(joinCode.trim(), name.trim())}
+            onBack={() => setView("menu")}
+            joinCodeReadOnly={isJoinDeepLink}
+          />
+        )}
 
-        <label>Join via code</label>
-        <input
-          id="join-code-input"
-          value={joinCode}
-          onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-          placeholder="GUID code"
-          readOnly={isJoinFlow}
-        />
-
-        <div className="actions">
-          <button
-            id="join-game-btn"
-            onClick={() => joinMatch(joinCode, name)}
-            disabled={!name.trim() || !joinCode.trim()}
-          >
-            Join Game
-          </button>
-        </div>
+        {error ? <p className="error">{error}</p> : null}
       </section>
     </main>
   );

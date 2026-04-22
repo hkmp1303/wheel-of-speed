@@ -61,13 +61,15 @@ async function waitForBothPlayersInLobby(hostPage, guestPage) {
 
 async function setupTwoPlayerMatch(hostPage, guestPage) {
   await hostPage.goto('/')
+  await hostPage.getByRole('button', { name: 'Create Lobby' }).click()
   await hostPage.getByPlaceholder('Ange namn').fill('Alice')
   await hostPage.getByRole('button', { name: 'Create Game' }).click()
 
-  const codeText = await hostPage.locator('p strong').first().textContent()
+  const codeText = await hostPage.locator('#invite-code-display').textContent()
   const joinCode = (codeText ?? '').trim()
 
   await guestPage.goto('/')
+  await guestPage.getByRole('button', { name: 'Join Lobby' }).click()
   await guestPage.getByPlaceholder('Ange namn').fill('Bob')
   await guestPage.getByPlaceholder('GUID code').fill(joinCode)
   await guestPage.getByRole('button', { name: 'Join Game' }).click()
