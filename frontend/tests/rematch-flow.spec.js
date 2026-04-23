@@ -62,7 +62,7 @@ async function waitForBothPlayersInLobby(hostPage, guestPage) {
 async function setupTwoPlayerMatch(hostPage, guestPage) {
   await hostPage.goto('/')
   await hostPage.getByRole('button', { name: 'Create Lobby' }).click()
-  await hostPage.getByPlaceholder('Ange namn').fill('Alice')
+  await hostPage.getByPlaceholder('Enter name').fill('Alice')
   await hostPage.getByRole('button', { name: 'Create Game' }).click()
 
   const codeText = await hostPage.locator('#invite-code-display').textContent()
@@ -70,7 +70,7 @@ async function setupTwoPlayerMatch(hostPage, guestPage) {
 
   await guestPage.goto('/')
   await guestPage.getByRole('button', { name: 'Join Lobby' }).click()
-  await guestPage.getByPlaceholder('Ange namn').fill('Bob')
+  await guestPage.getByPlaceholder('Enter name').fill('Bob')
   await guestPage.getByPlaceholder('GUID code').fill(joinCode)
   await guestPage.getByRole('button', { name: 'Join Game' }).click()
 
@@ -83,8 +83,8 @@ async function startMatch(hostPage, guestPage) {
   await hostPage.getByRole('button', { name: 'Ready' }).click()
   await guestPage.getByRole('button', { name: 'Ready' }).click()
 
-  await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
-  await expect(guestPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
+  await expect(hostPage.getByRole('heading', { name: /Round 1\/\d+/ })).toBeVisible()
+  await expect(guestPage.getByRole('heading', { name: /Round 1\/\d+/ })).toBeVisible()
 }
 
 // Finishes match deterministically by driving game actions through API.

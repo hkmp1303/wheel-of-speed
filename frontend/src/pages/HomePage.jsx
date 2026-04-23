@@ -17,21 +17,28 @@ export default function HomePage() {
   const [name, setName] = useState("");
   const [joinCode, setJoinCode] = useState(initialJoinCode);
   const [difficulty, setDifficulty] = useState("Normal");
+  const [maxRounds, setMaxRounds] = useState(4);
 
   return (
     <main className="page">
-      <section className="card">
-        <h1>Wheel of Speed</h1>
-        <p>Guess the word, simple as that.</p>
+      <section className="card home-card">
+        <div className="home-card-title">
+          <h1 style={{ textAlign: "center" }}>Wheel of Speed</h1>
+        </div>
 
         {view === "menu" && (
-          <div className="actions">
-            <button type="button" onClick={() => setView("create")}>
-              Create Lobby
-            </button>
-            <button type="button" onClick={() => setView("join")}>
-              Join Lobby
-            </button>
+          <div className="home-menu">
+            <p style={{ textAlign: "center" }} className="home-intro">
+              Welcome. Please select how you want to play.
+            </p>
+            <div className="actions">
+              <button type="button" onClick={() => setView("create")}>
+                Create Lobby
+              </button>
+              <button type="button" onClick={() => setView("join")}>
+                Join Lobby
+              </button>
+            </div>
           </div>
         )}
 
@@ -39,9 +46,13 @@ export default function HomePage() {
           <CreateLobbyForm
             name={name}
             difficulty={difficulty}
+            maxRounds={maxRounds}
             onNameChange={setName}
             onDifficultyChange={setDifficulty}
-            onSubmit={() => void createMatch(name.trim(), difficulty)}
+            onMaxRoundsChange={setMaxRounds}
+            onSubmit={() =>
+              void createMatch(name.trim(), difficulty, maxRounds)
+            }
             onBack={() => setView("menu")}
           />
         )}
