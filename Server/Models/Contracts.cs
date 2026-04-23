@@ -15,7 +15,7 @@ public enum MatchStatus
     Finished
 }
 
-public sealed record CreateMatchRequest(string HostName, Difficulty Difficulty = Difficulty.Normal);
+public sealed record CreateMatchRequest(string HostName, Difficulty Difficulty = Difficulty.Normal, int MaxRounds = 4);
 public sealed record JoinMatchRequest(string PlayerName);
 public sealed record ReadyRequest(string PlayerId);
 public sealed record SpinRequest(string PlayerId);
@@ -67,7 +67,7 @@ public sealed class MatchState
     public string GuidCode { get; set; } = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
     public MatchStatus Status { get; set; } = MatchStatus.Lobby;
     public int CurrentRound { get; set; } = 0;
-    public int MaxRounds { get; set; } = 3;
+    public int MaxRounds { get; set; } = 4;
     public string? ActivePlayerId { get; set; }
     public int ActivePlayerIndex { get; set; }
     public int SecondsLeft { get; set; } = 45;

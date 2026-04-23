@@ -33,7 +33,7 @@ async function startMatchWithTwoPlayers(browser) {
   await guestPage.getByRole('button', { name: 'Ready' }).click()
 
   // Wait for match to start
-  await expect(hostPage.getByRole('heading', { name: 'Round 1/3' })).toBeVisible()
+  await expect(hostPage.getByRole('heading', { name: /Round 1\/\d+/ })).toBeVisible()
 
   return { hostContext, guestContext, hostPage, guestPage }
 }
