@@ -12,18 +12,11 @@ export default function RulesPage({ onBack }) {
               minHeight: "2rem",
             }}
           >
-            <h1 style={{ margin: 0 }}>Game Rules</h1>
+            <h1 style={{ margin: "0 0 1rem" }}>Game Rules</h1>
             <button
               type="button"
               className="rules-back"
-              style={{
-                position: "absolute",
-                right: 0,
-                marginTop: 0,
-                padding: "0.28rem 0.62rem",
-                fontSize: "0.9rem",
-                letterSpacing: "0.03em",
-              }}
+              style={{ position: "absolute", right: 0 }}
               onClick={onBack}
             >
               Back
