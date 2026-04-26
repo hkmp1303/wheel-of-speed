@@ -149,7 +149,6 @@ export default function MatchPage() {
 
   function handleWheelAnimationComplete(reward) {
     // Animation complete, but spinPending will be cleared when server broadcasts matchUpdated
-    console.log(`Wheel animation complete for reward: ${reward}`);
   }
 
   async function handleSpinButton() {
@@ -234,14 +233,7 @@ export default function MatchPage() {
             </p>
           </div>
         </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "1rem",
-            marginTop: "0.5rem",
-          }}
-        >
+        <div className="game-components">
           <PrizeWheel
             spinPending={spinPending}
             reward={matchState.currentWheelValue}

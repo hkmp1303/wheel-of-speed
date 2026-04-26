@@ -13,19 +13,19 @@ async function startMatchWithTwoPlayers(browser) {
 
   // Host creates a game
   await hostPage.goto('/')
-  await hostPage.getByRole('button', { name: 'Create Lobby' }).click()
-  await hostPage.getByPlaceholder('Enter name').fill('Alice')
+  await hostPage.getByRole('button', { name: 'Create Lobby'}).click()
+  await hostPage.locator('#host-name-input').fill('Alice')
   await hostPage.getByRole('button', { name: 'Create Game' }).click()
 
   // Get the join code
-  const codeText = await hostPage.locator('#invite-code-display').textContent()
+  const codeText = await hostPage.locator('p strong').first().textContent()
   const joinCode = (codeText ?? '').trim()
 
   // Guest joins the game
   await guestPage.goto('/')
   await guestPage.getByRole('button', { name: 'Join Lobby' }).click()
-  await guestPage.getByPlaceholder('Enter name').fill('Bob')
-  await guestPage.getByPlaceholder('GUID code').fill(joinCode)
+  await guestPage.locator('#player-name-input').fill('Bob')
+  await guestPage.locator('#join-code-input').fill(joinCode)
   await guestPage.getByRole('button', { name: 'Join Game' }).click()
 
   // Both players mark ready - match starts automatically
