@@ -88,6 +88,16 @@ input {
   justify-content: center;
 }
 
+.game-components {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    @media only screen and (max-width: 768px) {
+      flex-direction: column;
+    }
+  }
+
 .page {
   min-height: 100vh;
   display: grid;
@@ -457,7 +467,7 @@ label {
   display: flex;
   gap: 0.5rem;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin: 0.5rem 0;
 }
 
@@ -465,7 +475,7 @@ label {
   width: 42px;
   height: 52px;
   border-bottom: 3px solid var(--accent-primary);
-  background: #0f131a;
+  background: transparent;
   border-radius: 6px 6px 0 0;
   display: flex;
   align-items: center;
@@ -473,7 +483,7 @@ label {
   font-size: 1.5rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #f5f7fb;
+  color: var(--color-text-light);
 }
 
 .messages {
@@ -524,14 +534,6 @@ label {
   opacity: 0.8;
 }
 
-.reward-display {
-  min-height: 20px;
-}
-
-.hidden {
-  visibility: hidden;
-}
-
 .player-list {
   margin-top: 1rem;
 }
@@ -551,43 +553,6 @@ label {
 
 .timer p {
   margin: 0;
-}
-
-.prize-wheel {
-  display: grid;
-  gap: 0.65rem;
-  justify-items: center;
-  min-width: 150px;
-}
-
-.wheel-visual {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.35));
-  transform-origin: center;
-}
-
-.wheel-visual svg {
-  overflow: visible;
-}
-
-.wheel-visual.spinning {
-  animation: wheel-spin 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-@keyframes wheel-spin {
-  0% {
-    transform: rotate(0deg) scale(0.96);
-  }
-
-  70% {
-    transform: rotate(680deg) scale(1.03);
-  }
-
-  100% {
-    transform: rotate(720deg) scale(1);
-  }
 }
 
 .accept-button {
