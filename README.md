@@ -280,6 +280,8 @@ Collaboration for early planning and development occured in Miro and is availabl
 
 - A copy of the main branch at the time of the project presentation
   - [demo](../../tree/demo)
+- Alternative project setup from scratch which was not implemented
+  - [project-setup](../../tree/demo)
 
 ## Authors
 
